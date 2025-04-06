@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>edulcni Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .viz-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        .viz-header {
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .viz-main {
+            flex: 1;
+            overflow: auto;
+            padding: 10px;
+        }
+        
+        #visualization-canvas {
+            border: 1px solid #ddd;
+            background-color: white;
+        }
+        
+        .viz-controls {
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-top: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+        }
+        
+        .viz-controls button {
+            margin-right: 10px;
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        
+        .viz-controls button:hover {
+            background-color: #45a049;
+        }
+        
+        #frame-slider {
+            flex: 1;
+            margin: 0 10px;
+        }
+        
+        #frame-counter {
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="viz-container">
+        <div class="viz-header">
+            <h1 id="frame-title">Frame 1</h1>
+        </div>
+        
+        <div class="viz-main">
+            <canvas id="visualization-canvas"></canvas>
+        </div>
+        
+        <div class="viz-controls">
+            <button id="btn-prev">◀ Previous</button>
+            <button id="btn-play">▶ Play</button>
+            <button id="btn-next">Next ▶</button>
+            <input type="range" id="frame-slider" min="1" max="100" value="1">
+            <span id="frame-counter">1/100</span>
+        </div>
+    </div>
+    
+    <script src="js/universal_viewer.js"></script>
+    <script src="data.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const viewer = new UniversalViewer(vizData);
+            viewer.initialize();
+        });
+    </script>
+</body>
+</html> 

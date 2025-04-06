@@ -11,6 +11,7 @@
 #include <string>
 #include "edulcni/core/widget.hpp"
 #include "edulcni/core/state.hpp"
+#include "edulcni/core/render.hpp"
 
 namespace edulcni {
 namespace internal {
@@ -32,6 +33,11 @@ class ArrayWidgetBase : public Widget {
 protected:
     std::unordered_set<int> highlights_;
     
+    // Constants for layout
+    static constexpr double CELL_WIDTH = 60;
+    static constexpr double CELL_HEIGHT = 40;
+    static constexpr double PADDING = 5;
+    
 public:
     ArrayWidgetBase(std::string id) : Widget(std::move(id)) {}
     
@@ -46,6 +52,14 @@ public:
     // Type-specific methods to be implemented by derived classes
     virtual json::value values_to_json() const = 0;
     virtual size_t size() const = 0;
+    virtual std::vector<std::string> get_display_values() const = 0;
+    
+    // Calculate dimensions based on array size
+    void calculate_dimensions() override {
+        size_t arr_size = size();
+        width_ = arr_size > 0 ? arr_size * (CELL_WIDTH + PADDING) - PADDING : CELL_WIDTH;
+        height_ = CELL_HEIGHT;
+    }
     
     json::value to_json() const override {
         json::value result = json::object{};
@@ -60,6 +74,10 @@ public:
         }
         result["highlights"] = std::move(highlights);
         
+        // Add dimensions
+        result["width"] = width_;
+        result["height"] = height_;
+        
         return result;
     }
     
@@ -69,6 +87,46 @@ public:
     
     std::string widget_type() const override {
         return "array";
+    }
+    
+    // Generate rendering instructions for the array
+    std::unique_ptr<render::Element> render() const override {
+        // Get string representation of values
+        std::vector<std::string> values = get_display_values();
+        
+        // Create a group to hold all elements
+        auto group = std::make_unique<render::Group>();
+        
+        // Render each cell
+        for (size_t i = 0; i < values.size(); i++) {
+            double x = i * (CELL_WIDTH + PADDING);
+            double y = 0;
+            
+            // Create a cell group
+            auto cell_group = std::make_unique<render::Group>(x, y);
+            
+            // Cell background
+            render::Color bgColor = render::Color::White();
+            if (highlights_.find(i) != highlights_.end()) {
+                bgColor = render::Color::Highlight();
+            }
+            
+            cell_group->add(std::make_unique<render::Rectangle>(
+                0, 0, CELL_WIDTH, CELL_HEIGHT, 
+                bgColor, render::Color::Black(), 1.0
+            ));
+            
+            // Cell value
+            cell_group->add(std::make_unique<render::Text>(
+                CELL_WIDTH / 2, CELL_HEIGHT / 2, 
+                values[i], "14px Arial", render::Color::Black(), "center"
+            ));
+            
+            // Add cell to main group
+            group->add(std::move(cell_group));
+        }
+        
+        return group;
     }
 };
 
@@ -86,6 +144,7 @@ public:
         data_.clear();
         data_.insert(data_.end(), begin, end);
         clear_highlights();
+        calculate_dimensions();
     }
     
     json::value values_to_json() const override {
@@ -98,6 +157,14 @@ public:
     
     size_t size() const override {
         return data_.size();
+    }
+    
+    std::vector<std::string> get_display_values() const override {
+        std::vector<std::string> result;
+        for (const auto& item : data_) {
+            result.push_back(to_string_any(item));
+        }
+        return result;
     }
 };
 
@@ -137,6 +204,16 @@ void array_clear_highlights(const std::string& id) {
         widget->clear_highlights();
         internal::State::instance().update_widget(id);
     }
+}
+
+// Get widget dimensions
+std::pair<double, double> array_dimensions(const std::string& id) {
+    auto* widget = internal::State::instance()
+        .get_widget_base<internal::ArrayWidgetBase>(id);
+    if (widget) {
+        return {widget->width(), widget->height()};
+    }
+    return {0, 0};
 }
 
 } // namespace edulcni 

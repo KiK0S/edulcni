@@ -7,11 +7,12 @@
 #include "edulcni/core/frame.hpp"
 #include "edulcni/core/widget.hpp"
 #include "edulcni/core/export.hpp"
+#include "edulcni/core/render.hpp"
 
 // Include widgets
 #include "edulcni/widgets/array.hpp"
 #include "edulcni/widgets/string_compare.hpp"
-
+#include "edulcni/widgets/graph.hpp"
 // Public API
 namespace edulcni {
     // Core functions
@@ -20,5 +21,5 @@ namespace edulcni {
     void breakpoint();
     void freeze();
     void unfreeze();
-    void export_visualization(const std::string& output_dir = "./viz_output");
+    // void export_visualization(const std::string& output_dir = "./viz_output");
 } 

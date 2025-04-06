@@ -75,7 +75,7 @@ int main() {
     edulcni::initialize("./string_viz_output");
     
     // Create sample data
-    std::vector<std::string> data = {"banana", "apple", "pear", "orange", "grape", "kiwi", "melon"};
+    std::vector<std::string> data = {"aba", "baa", "aab", "ab"};
     
     // Sort and visualize
     bubble_sort(data);

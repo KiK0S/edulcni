@@ -58,10 +58,10 @@ public:
             throw std::runtime_error("edulcni not initialized. Call edulcni::initialize() first.");
         }
         
-        // Create a new frame with current widget states
+        // Create a new frame with current widget states and renders
         Frame frame;
         for (const auto& [id, widget] : widgets_) {
-            frame.add_widget_state(id, widget->to_json());
+            frame.add_widget_state(id, widget->to_json(), widget->render());
         }
         
         frames_.push_back(std::move(frame));
@@ -73,8 +73,7 @@ public:
     
     void unfreeze() {
         frozen_ = false;
-        // Unlike before, we don't automatically create a breakpoint when unfreezing
-        // This lets users control exactly when breakpoints happen
+        // We don't automatically create a breakpoint when unfreezing
     }
     
     template<typename WidgetT, typename... Args>

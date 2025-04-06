@@ -69,34 +69,7 @@ void visualize_std_sort(std::vector<std::string>& data) {
     
     // Sort using custom comparator
     StringComparator comparator("comparison");
-    
-    // For visualization purposes, we need to intercept the std::sort
-    // We'll use our own simple sort algorithm but with the same comparator
-    for (size_t i = 0; i < data.size(); ++i) {
-        for (size_t j = 0; j < i; ++j) {
-            // Highlight the elements being compared
-            edulcni::array_clear_highlights("strings");
-            edulcni::array_highlight("strings", i);
-            edulcni::array_highlight("strings", j);
-            edulcni::breakpoint();
-            
-            if (comparator(data[i], data[j])) {
-                // Element i should go before element j
-                std::string temp = data[i];
-                for (size_t k = i; k > j; --k) {
-                    data[k] = data[k-1];
-                }
-                data[j] = temp;
-                
-                // Show the updated array
-                edulcni::array_widget("strings", data.begin(), data.end());
-                edulcni::array_highlight("strings", j);
-                edulcni::breakpoint();
-                
-                break;
-            }
-        }
-    }
+    std::sort(data.begin(), data.end(), comparator);
     
     // Display final sorted array
     edulcni::array_clear_highlights("strings");
