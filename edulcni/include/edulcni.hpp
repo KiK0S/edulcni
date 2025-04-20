@@ -13,13 +13,16 @@
 #include "edulcni/widgets/array.hpp"
 #include "edulcni/widgets/string_compare.hpp"
 #include "edulcni/widgets/graph.hpp"
+#include "edulcni/widgets/game_board.hpp"
+#include "edulcni/widgets/game_types.hpp"
+
 // Public API
 namespace edulcni {
     // Core functions
-    void initialize(const std::string& output_dir = "./viz_output");
+    void initialize(const std::string& output_dir, bool interactive = false);
     void finalize();
     void breakpoint();
     void freeze();
     void unfreeze();
-    // void export_visualization(const std::string& output_dir = "./viz_output");
+    void export_visualization(const std::string& output_dir = "./viz_output");
 } 

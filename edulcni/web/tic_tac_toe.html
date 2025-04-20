@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe - Edulcni</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+        }
+        
+        #game-canvas {
+            border: 1px solid #ccc;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin: 20px auto;
+            display: block;
+        }
+        
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        #game-message {
+            margin: 20px 0;
+            font-size: 18px;
+            height: 30px;
+            color: #333;
+        }
+        
+        .game-board {
+            display: none; /* Hide the old DOM-based board */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tic Tac Toe</h1>
+        <div id="game-message" class="game-message"></div>
+        
+        <!-- Canvas for rendering -->
+        <canvas id="game-canvas" width="450" height="450"></canvas>
+        
+        <!-- Original board hidden but kept for compatibility -->
+        <div id="tictactoe" class="game-board"></div>
+        
+        <button id="reset_button">Reset Game</button>
+    </div>
+
+    <!-- Important: Load JS files in the correct order -->
+    <script src="js/edulcni_interactive.js"></script>
+    <script src="js/canvas_renderer.js"></script>
+    <script>
+        // This will load and initialize the WebAssembly module
+        var Module = {
+            onRuntimeInitialized: function() {
+                console.log('WebAssembly module loaded');
+            }
+        };
+    </script>
+    <script src="js/tic_tac_toe.js"></script>
+</body>
+</html> 

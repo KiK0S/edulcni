@@ -407,7 +407,7 @@ class UniversalViewer {
 } // namespace internal
 
 // Public API for export
-inline void export_visualization(const std::string& output_dir = "./viz_output") {
+inline void export_visualization(const std::string& output_dir) {
     internal::State::instance().finalize();
     internal::Exporter exporter;
     exporter.export_to_html(output_dir, internal::State::instance().frames());

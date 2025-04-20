@@ -21,6 +21,7 @@ private:
     bool frozen_ = false;  // When true, breakpoints are only created manually
     std::string output_dir_;
     bool initialized_ = false;
+    bool interactive_ = false;  // New flag for interactive mode
     
     // Private constructor for singleton
     State() = default;
@@ -32,7 +33,7 @@ public:
         return state;
     }
     
-    void initialize(const std::string& output_dir) {
+    void initialize(const std::string& output_dir, bool interactive = false) {
         if (initialized_) {
             return;
         }
@@ -41,12 +42,17 @@ public:
         frames_.clear();
         widgets_.clear();
         frozen_ = false;  // Start in auto-breakpoint mode
+        interactive_ = interactive;  // Set interactive mode
         initialized_ = true;
+    }
+    
+    bool is_interactive() const {
+        return interactive_;
     }
     
     void finalize() {
         // Create a final frame if needed
-        if (!frames_.empty()) {
+        if (!frames_.empty() && !interactive_) {
             breakpoint();
         }
         
@@ -56,6 +62,12 @@ public:
     void breakpoint() {
         if (!initialized_) {
             throw std::runtime_error("edulcni not initialized. Call edulcni::initialize() first.");
+        }
+        
+        // In interactive mode, breakpoint behavior may differ
+        if (interactive_) {
+            // In interactive mode, breakpoints might pause execution or just log
+            return;
         }
         
         // Create a new frame with current widget states and renders
@@ -141,9 +153,9 @@ public:
 
 } // namespace internal
 
-// Public API implementation
-inline void initialize(const std::string& output_dir) {
-    internal::State::instance().initialize(output_dir);
+// Public API implementation - update initialize to include interactive parameter
+inline void initialize(const std::string& output_dir, bool interactive) {
+    internal::State::instance().initialize(output_dir, interactive);
 }
 
 inline void finalize() {
