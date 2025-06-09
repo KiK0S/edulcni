@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>$TITLE</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #frameCanvas {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .controls {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .frame-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .frame-slider {
+            flex: 1;
+            height: 8px;
+            border-radius: 4px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .frame-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .frame-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 18px;
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #dc3545;
+            font-size: 18px;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .speed-slider {
+            width: 100px;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>$TITLE</h1>
+        
+        <div class="canvas-container">
+            <canvas id="frameCanvas" width="800" height="600"></canvas>
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <button id="playBtn" class="btn">Play</button>
+                <button id="pauseBtn" class="btn" disabled>Pause</button>
+                <button id="prevBtn" class="btn">Previous</button>
+                <button id="nextBtn" class="btn">Next</button>
+                <div class="frame-info">
+                    <span>Frame: </span>
+                    <span id="currentFrame">0</span>
+                    <span>/</span>
+                    <span id="totalFrames">0</span>
+                </div>
+            </div>
+            
+            <div class="control-row">
+                <div class="slider-container">
+                    <span>1</span>
+                    <input type="range" id="frameSlider" class="frame-slider" min="1" max="1" value="1">
+                    <span id="maxFrameLabel">1</span>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <div class="speed-control">
+                    <span>Speed:</span>
+                    <input type="range" id="speedSlider" class="speed-slider" min="0.1" max="3" step="0.1" value="1">
+                    <span id="speedValue">1.0x</span>
+                </div>
+            </div>
+
+            <div class="control-row">
+                <button id="exportFrameBtn" class="btn">Export Frame (JPG)</button>
+                <button id="exportVideoBtn" class="btn">Export Video (WebM)</button>
+                <button id="exportPngZipBtn" class="btn">Export PNG Frames (ZIP)</button>
+                <div id="exportProgress" style="display: none; margin-left: 15px; color: #666;">
+                    <span id="progressText">Processing...</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="loadingMsg" class="loading">Loading frame data...</div>
+        <div id="errorMsg" class="error" style="display: none;"></div>
+    </div>
+
+    <script src="$DATA_FILE_PATH"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+        class FrameViewer {
+            constructor() {
+                this.frames = [];
+                this.currentFrame = 0;
+                this.isPlaying = false;
+                this.playInterval = null;
+                this.playSpeed = 1.0;
+                this.canvas = document.getElementById('frameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                this.initializeElements();
+                this.setupEventListeners();
+                this.loadFrameData();
+            }
+
+            initializeElements() {
+                this.playBtn = document.getElementById('playBtn');
+                this.pauseBtn = document.getElementById('pauseBtn');
+                this.prevBtn = document.getElementById('prevBtn');
+                this.nextBtn = document.getElementById('nextBtn');
+                this.frameSlider = document.getElementById('frameSlider');
+                this.speedSlider = document.getElementById('speedSlider');
+                this.currentFrameSpan = document.getElementById('currentFrame');
+                this.totalFramesSpan = document.getElementById('totalFrames');
+                this.maxFrameLabel = document.getElementById('maxFrameLabel');
+                this.speedValue = document.getElementById('speedValue');
+                this.loadingMsg = document.getElementById('loadingMsg');
+                this.errorMsg = document.getElementById('errorMsg');
+            }
+
+            setupEventListeners() {
+                this.playBtn.addEventListener('click', () => this.play());
+                this.pauseBtn.addEventListener('click', () => this.pause());
+                this.prevBtn.addEventListener('click', () => this.previousFrame());
+                this.nextBtn.addEventListener('click', () => this.nextFrame());
+                
+                this.frameSlider.addEventListener('input', (e) => {
+                    this.goToFrame(parseInt(e.target.value) - 1);
+                });
+                
+                this.speedSlider.addEventListener('input', (e) => {
+                    this.playSpeed = parseFloat(e.target.value);
+                    this.speedValue.textContent = this.playSpeed.toFixed(1) + 'x';
+                    if (this.isPlaying) {
+                        this.pause();
+                        this.play();
+                    }
+                });
+
+                // Export button listeners
+                document.getElementById('exportFrameBtn').addEventListener('click', () => this.exportCurrentFrame());
+                document.getElementById('exportVideoBtn').addEventListener('click', () => this.exportWebMVideo());
+                document.getElementById('exportPngZipBtn').addEventListener('click', () => this.exportAsPngZip());
+
+                // Keyboard controls
+                document.addEventListener('keydown', (e) => {
+                    switch(e.key) {
+                        case ' ':
+                        case 'Enter':
+                            e.preventDefault();
+                            this.isPlaying ? this.pause() : this.play();
+                            break;
+                        case 'ArrowLeft':
+                            e.preventDefault();
+                            this.previousFrame();
+                            break;
+                        case 'ArrowRight':
+                            e.preventDefault();
+                            this.nextFrame();
+                            break;
+                    }
+                });
+            }
+
+            loadFrameData() {
+                try {
+                    // Check if frameData is available (loaded by external script)
+                    if (typeof window.frameData === 'undefined') {
+                        throw new Error('Frame data not found. Make sure the data file defines window.frameData');
+                    }
+                    
+                    if (!Array.isArray(window.frameData)) {
+                        throw new Error('Frame data must be an array');
+                    }
+                    
+                    this.frames = window.frameData;
+                    this.initializeViewer();
+                    
+                } catch (error) {
+                    this.showError(`Error loading frame data: ${error.message}`);
+                }
+            }
+
+            initializeViewer() {
+                if (this.frames.length === 0) {
+                    this.showError('No frames found in data file');
+                    return;
+                }
+
+                this.loadingMsg.style.display = 'none';
+                
+                // Update UI elements
+                this.totalFramesSpan.textContent = this.frames.length;
+                this.maxFrameLabel.textContent = this.frames.length;
+                this.frameSlider.max = this.frames.length;
+                
+                // Draw first frame
+                this.goToFrame(0);
+                
+                // Enable controls
+                this.playBtn.disabled = false;
+                this.prevBtn.disabled = false;
+                this.nextBtn.disabled = false;
+                this.frameSlider.disabled = false;
+            }
+
+            showError(message) {
+                this.loadingMsg.style.display = 'none';
+                this.errorMsg.textContent = message;
+                this.errorMsg.style.display = 'block';
+            }
+
+            drawFrame(frameIndex) {
+                if (frameIndex < 0 || frameIndex >= this.frames.length) {
+                    return;
+                }
+
+                // Clear canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Fill with white background
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Set up canvas context
+                this.ctx.save();
+                
+                try {
+                    const frameInstructions = this.frames[frameIndex];
+                    
+                    // Always treat as function and call with ctx and canvas
+                    frameInstructions(this.ctx, this.canvas);
+                    
+                } catch (error) {
+                    console.error(`Error drawing frame ${frameIndex}:`, error);
+                    this.ctx.fillStyle = '#ff0000';
+                    this.ctx.font = '16px Arial';
+                    this.ctx.fillText(`Error drawing frame ${frameIndex + 1}`, 10, 30);
+                    this.ctx.fillText(error.message, 10, 50);
+                }
+                
+                this.ctx.restore();
+            }
+
+            goToFrame(frameIndex) {
+                if (frameIndex < 0 || frameIndex >= this.frames.length) {
+                    return;
+                }
+                
+                this.currentFrame = frameIndex;
+                this.drawFrame(frameIndex);
+                
+                // Update UI
+                this.currentFrameSpan.textContent = frameIndex + 1;
+                this.frameSlider.value = frameIndex + 1;
+            }
+
+            play() {
+                if (this.frames.length === 0) return;
+                
+                this.isPlaying = true;
+                this.playBtn.disabled = true;
+                this.pauseBtn.disabled = false;
+                
+                const frameDelay = 1000 / (3 * this.playSpeed); // 3 FPS base rate
+                
+                this.playInterval = setInterval(() => {
+                    this.nextFrame();
+                    
+                    // Loop back to start when reaching the end
+                    if (this.currentFrame >= this.frames.length - 1) {
+                        this.goToFrame(0);
+                    }
+                }, frameDelay);
+            }
+
+            pause() {
+                this.isPlaying = false;
+                this.playBtn.disabled = false;
+                this.pauseBtn.disabled = true;
+                
+                if (this.playInterval) {
+                    clearInterval(this.playInterval);
+                    this.playInterval = null;
+                }
+            }
+
+            nextFrame() {
+                if (this.currentFrame < this.frames.length - 1) {
+                    this.goToFrame(this.currentFrame + 1);
+                }
+            }
+
+            previousFrame() {
+                if (this.currentFrame > 0) {
+                    this.goToFrame(this.currentFrame - 1);
+                }
+            }
+
+            exportCurrentFrame() {
+                if (this.frames.length === 0) return;
+                
+                // Create a temporary canvas with the current frame
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = this.canvas.width;
+                tempCanvas.height = this.canvas.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                
+                // Clear and fill with white background
+                tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+                tempCtx.fillStyle = '#ffffff';
+                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                
+                // Draw the current frame
+                tempCtx.save();
+                try {
+                    this.frames[this.currentFrame](tempCtx, tempCanvas);
+                } catch (error) {
+                    console.error('Error drawing frame for export:', error);
+                    return;
+                }
+                tempCtx.restore();
+                
+                // Convert to blob and download
+                tempCanvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `frame_${this.currentFrame + 1}.jpg`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 'image/jpeg', 0.9);
+            }
+
+            async exportWebMVideo() {
+                if (this.frames.length === 0) return;
+                
+                const exportBtn = document.getElementById('exportVideoBtn');
+                const progressDiv = document.getElementById('exportProgress');
+                const progressText = document.getElementById('progressText');
+                const progressPercent = document.getElementById('progressPercent');
+                
+                // Disable button and show progress
+                exportBtn.disabled = true;
+                progressDiv.style.display = 'inline-block';
+                progressText.textContent = 'Creating WebM video...';
+                progressPercent.textContent = '0%';
+                
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = this.canvas.width;
+                    canvas.height = this.canvas.height;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Find best supported WebM format
+                    const formats = [
+                        'video/webm;codecs=vp9',
+                        'video/webm;codecs=vp8',
+                        'video/webm'
+                    ];
+                    
+                    let mimeType = null;
+                    for (const format of formats) {
+                        if (MediaRecorder.isTypeSupported(format)) {
+                            mimeType = format;
+                            break;
+                        }
+                    }
+                    
+                    if (!mimeType) {
+                        throw new Error('WebM video recording not supported in this browser');
+                    }
+                    
+                    console.log('Using format:', mimeType);
+                    
+                    // Use automatic capture at the target framerate
+                    const stream = canvas.captureStream(3); // 3 FPS
+                    const recorder = new MediaRecorder(stream, {
+                        mimeType: mimeType,
+                        videoBitsPerSecond: 8000000 // 8 Mbps
+                    });
+                    
+                    const chunks = [];
+                    recorder.ondataavailable = (e) => {
+                        if (e.data.size > 0) {
+                            chunks.push(e.data);
+                        }
+                    };
+                    
+                    // Promise for recording completion
+                    const recordingPromise = new Promise((resolve, reject) => {
+                        recorder.onstop = () => {
+                            if (chunks.length === 0) {
+                                reject(new Error('No video data recorded'));
+                                return;
+                            }
+                            
+                            const blob = new Blob(chunks, { type: mimeType });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `animation_${new Date().getTime()}.webm`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                            resolve();
+                        };
+                        
+                        recorder.onerror = (e) => {
+                            reject(new Error('Recording failed: ' + (e.error?.message || 'Unknown error')));
+                        };
+                    });
+                    
+                    // Start recording first
+                    recorder.start(200); // Collect data every 200ms
+                    
+                    // Wait a bit for recording to initialize
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                    
+                    // Animate through frames with consistent timing
+                    const frameDuration = 333; // 3 FPS = 333ms per frame
+                    const totalCycles = 1;
+                    const totalFrames = this.frames.length * totalCycles;
+                    
+                    for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
+                        const currentFrame = frameIndex % this.frames.length;
+                        progressPercent.textContent = `${Math.round((frameIndex / totalFrames) * 90)}%`;
+                        
+                        // Clear canvas and draw white background
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        
+                        // Draw the frame
+                        ctx.save();
+                        try {
+                            this.frames[currentFrame](ctx, canvas);
+                        } catch (error) {
+                            console.error(`Error drawing frame ${currentFrame}:`, error);
+                        }
+                        ctx.restore();
+                        
+                        // Wait for frame duration to match capture rate
+                        await new Promise(resolve => setTimeout(resolve, frameDuration));
+                    }
+                    
+                    progressText.textContent = 'Finalizing video...';
+                    progressPercent.textContent = '95%';
+                    
+                    // Wait a bit more to capture the last frame
+                    await new Promise(resolve => setTimeout(resolve, frameDuration * 2));
+                    
+                    // Stop recording
+                    recorder.stop();
+                    
+                    // Wait for recording to complete
+                    await recordingPromise;
+                    
+                    progressPercent.textContent = '100%';
+                    
+                } catch (error) {
+                    console.error('WebM export failed:', error);
+                    alert('❌ WebM export failed: ' + error.message);
+                } finally {
+                    this.resetExportUI('exportVideoBtn');
+                }
+            }
+            
+            async exportAsPngZip() {
+                if (this.frames.length === 0) return;
+                
+                const exportBtn = document.getElementById('exportPngZipBtn');
+                const progressDiv = document.getElementById('exportProgress');
+                const progressText = document.getElementById('progressText');
+                const progressPercent = document.getElementById('progressPercent');
+                
+                // Disable button and show progress
+                exportBtn.disabled = true;
+                progressDiv.style.display = 'inline-block';
+                
+                try {
+                    // Check if JSZip is available
+                    if (typeof JSZip === 'undefined') {
+                        throw new Error('ZIP library failed to load from CDN. Please check your internet connection and try again.');
+                    }
+                    
+                    progressText.textContent = 'Creating PNG frames...';
+                    progressPercent.textContent = '0%';
+                    
+                    const zip = new JSZip();
+                    
+                    for (let i = 0; i < this.frames.length; i++) {
+                        progressPercent.textContent = `${Math.round((i / this.frames.length) * 100)}%`;
+                        
+                        // Create temporary canvas for this frame
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = this.canvas.width;
+                        tempCanvas.height = this.canvas.height;
+                        const tempCtx = tempCanvas.getContext('2d');
+                        
+                        // Clear and fill with white background
+                        tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+                        tempCtx.fillStyle = '#ffffff';
+                        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                        
+                        // Draw the frame
+                        tempCtx.save();
+                        try {
+                            this.frames[i](tempCtx, tempCanvas);
+                        } catch (error) {
+                            console.error(`Error drawing frame ${i}:`, error);
+                            continue;
+                        }
+                        tempCtx.restore();
+                        
+                        // Convert to PNG and add to ZIP
+                        const dataURL = tempCanvas.toDataURL('image/png');
+                        const base64Data = dataURL.split(',')[1];
+                        zip.file(`frame_${String(i + 1).padStart(3, '0')}.png`, base64Data, { base64: true });
+                        
+                        // Allow UI to update
+                        await new Promise(resolve => setTimeout(resolve, 5));
+                    }
+                    
+                    // Create and download ZIP
+                    progressText.textContent = 'Creating ZIP file...';
+                    const zipBlob = await zip.generateAsync({ type: 'blob' });
+                    
+                    const url = URL.createObjectURL(zipBlob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `animation_frames_${new Date().getTime()}.zip`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                } catch (error) {
+                    console.error('PNG ZIP export failed:', error);
+                    alert('❌ PNG ZIP export failed: ' + error.message);
+                } finally {
+                    this.resetExportUI('exportPngZipBtn');
+                }
+            }
+            
+            resetExportUI(buttonId) {
+                const exportBtn = document.getElementById(buttonId);
+                const progressDiv = document.getElementById('exportProgress');
+                if (exportBtn) exportBtn.disabled = false;
+                progressDiv.style.display = 'none';
+            }
+
+
+        }
+
+        // Initialize the frame viewer when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new FrameViewer();
+        });
+    </script>
+</body>
+</html>

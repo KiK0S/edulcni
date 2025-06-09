@@ -1,2 +1,7 @@
 prompt
 edulcni/build
+edulcni-old
+build
+*_output
+examples/static
+examples/interactive

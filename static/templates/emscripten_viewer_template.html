@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>$TITLE - Interactive</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .canvas-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        #main-canvas {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: crosshair;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .info-panel {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .status {
+            font-size: 18px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-loading {
+            color: #007bff;
+        }
+
+        .status-ready {
+            color: #28a745;
+        }
+
+        .status-error {
+            color: #dc3545;
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .controls {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .controls h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .controls p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .mouse-coords {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .error-details {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+            color: #721c24;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+
+        .console-output {
+            background: #000;
+            color: #00ff00;
+            font-family: monospace;
+            padding: 15px;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>$TITLE</h1>
+        
+        <div class="info-panel">
+            <div id="status" class="status status-loading">
+                <div class="loading-spinner"></div>
+                Loading interactive application...
+            </div>
+            <div id="error-details" class="error-details" style="display: none;"></div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="main-canvas" width="800" height="600"></canvas>
+            <div id="mouse-coords" class="mouse-coords">Mouse: (0, 0)</div>
+        </div>
+
+        <div class="controls">
+            <h3>Interactive Controls</h3>
+            <p>
+                <strong>Mouse:</strong> Click on the canvas to interact<br>
+                <strong>Keyboard:</strong> Use keyboard shortcuts as implemented by the application<br>
+                <strong>Note:</strong> This is a real-time interactive application built with WebAssembly
+            </p>
+            
+            <div style="margin-top: 20px;">
+                <button id="exportFrameBtn" style="background: linear-gradient(45deg, #667eea, #764ba2); color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-size: 16px; font-weight: 600; margin: 5px;">
+                    Export Current Frame (JPG)
+                </button>
+                <div id="exportStatus" style="display: none; margin-top: 10px; color: #666; font-style: italic;"></div>
+            </div>
+        </div>
+
+        <div id="console-output" class="console-output" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Global variables for emscripten
+        var Module = {
+            canvas: document.getElementById('main-canvas'),
+            print: function(text) {
+                console.log(text);
+                addConsoleOutput(text, 'log');
+            },
+            printErr: function(text) {
+                console.error(text);
+                addConsoleOutput(text, 'error');
+            },
+            onRuntimeInitialized: function() {
+                setStatus('ready', 'Interactive application ready!');
+                console.log('Emscripten runtime initialized');
+            },
+            onAbort: function(what) {
+                console.error('Application aborted:', what);
+                setStatus('error', 'Application aborted: ' + what);
+                
+                // Try to get stack trace
+                if (typeof stackTrace !== 'undefined') {
+                    console.error('Stack trace:', stackTrace());
+                }
+            },
+            onExit: function(status) {
+                console.log('Application exited with status:', status);
+                if (status !== 0) {
+                    setStatus('error', 'Application exited with error code: ' + status);
+                }
+            }
+        };
+
+        // Enhanced edulcniJS object for interactive mode
+        window.edulcniJS = {
+            onFrameReady: function(frameFunction) {
+                // Apply frame to canvas
+                var canvas = Module.canvas;
+                var ctx = canvas.getContext('2d');
+                
+                // Clear canvas and fill with white background
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                if (frameFunction && typeof frameFunction === 'function') {
+                    frameFunction(ctx, canvas);
+                }
+            },
+            
+            invokeCallback: function(eventId) {
+                if (Module && Module.ccall) {
+                    Module.ccall('invoke_callback', 'void', ['string'], [eventId], {async: true});
+                }
+            },
+            
+            invokeCallbackWithData: function(eventId, eventData) {
+                if (Module && Module.ccall) {
+                    var jsonData = typeof eventData === 'string' ? eventData : JSON.stringify(eventData);
+                    Module.ccall('invoke_callback_with_data', 'void', ['string', 'string'], [eventId, jsonData], {async: true});
+                }
+            },
+            
+            setupWidgetClickHandler: function(widgetId) {
+                var element = document.getElementById(widgetId) || Module.canvas;
+                if (element) {
+                    element.addEventListener('click', function(e) {
+                        var rect = element.getBoundingClientRect();
+                        var eventData = {
+                            type: 'click',
+                            x: e.clientX - rect.left,
+                            y: e.clientY - rect.top,
+                            button: e.button,
+                            target_id: widgetId
+                        };
+                        console.log('Click event triggered:', eventData);
+                        window.edulcniJS.invokeCallbackWithData(widgetId + '_click', eventData);
+                    });
+                    console.log('Click handler attached to element:', element);
+                }
+            },
+            
+            setupGlobalCanvasClickHandler: function() {
+                var canvas = Module.canvas;
+                if (canvas && !canvas._edulcni_global_click_handler) {
+                    canvas.addEventListener('click', function(e) {
+                        var rect = canvas.getBoundingClientRect();
+                        var eventData = {
+                            type: 'click',
+                            x: e.clientX - rect.left,
+                            y: e.clientY - rect.top,
+                            button: e.button,
+                            target_id: 'canvas'
+                        };
+                        console.log('Global canvas click:', eventData);
+                        window.edulcniJS.invokeCallbackWithData('canvas_click', eventData);
+                    });
+                    canvas._edulcni_global_click_handler = true;
+                    console.log('Global canvas click handler attached');
+                }
+            },
+                       
+            console: function(message, type) {
+                // Add message to our console output
+                addConsoleOutput(message, type || 'log');
+                
+                // Also log to browser console
+                if (type === 'error') {
+                    console.error(message);
+                } else if (type === 'warn') {
+                    console.warn(message);
+                } else {
+                    console.log(message);
+                }
+            }
+        };
+
+        function setStatus(type, message) {
+            var statusElement = document.getElementById('status');
+            var errorDetails = document.getElementById('error-details');
+            
+            statusElement.className = 'status status-' + type;
+            
+            if (type === 'loading') {
+                statusElement.innerHTML = '<div class="loading-spinner"></div>' + message;
+                errorDetails.style.display = 'none';
+            } else if (type === 'ready') {
+                statusElement.innerHTML = '✓ ' + message;
+                errorDetails.style.display = 'none';
+            } else if (type === 'error') {
+                statusElement.innerHTML = '✗ ' + message;
+                errorDetails.style.display = 'block';
+                errorDetails.textContent = message;
+            }
+        }
+
+        function addConsoleOutput(text, type) {
+            var consoleOutput = document.getElementById('console-output');
+            if (consoleOutput.style.display === 'none') {
+                consoleOutput.style.display = 'block';
+            }
+            
+            var line = document.createElement('div');
+            line.style.color = type === 'error' ? '#ff6b6b' : '#00ff00';
+            line.textContent = new Date().toLocaleTimeString() + ': ' + text;
+            consoleOutput.appendChild(line);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        // Setup mouse tracking
+        Module.canvas.addEventListener('mousemove', function(e) {
+            var rect = Module.canvas.getBoundingClientRect();
+            var x = Math.round(e.clientX - rect.left);
+            var y = Math.round(e.clientY - rect.top);
+            document.getElementById('mouse-coords').textContent = `Mouse: (${x}, ${y})`;
+        });
+
+        // Setup export functionality
+        document.getElementById('exportFrameBtn').addEventListener('click', function() {
+            exportCurrentFrame();
+        });
+
+        function exportCurrentFrame() {
+            try {
+                var canvas = Module.canvas;
+                var exportStatus = document.getElementById('exportStatus');
+                
+                exportStatus.style.display = 'block';
+                exportStatus.textContent = 'Exporting frame...';
+                
+                // Create a temporary canvas to ensure white background
+                var tempCanvas = document.createElement('canvas');
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                var tempCtx = tempCanvas.getContext('2d');
+                
+                // Fill with white background
+                tempCtx.fillStyle = '#ffffff';
+                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                
+                // Draw the current canvas content
+                tempCtx.drawImage(canvas, 0, 0);
+                
+                // Convert temp canvas to blob and download
+                tempCanvas.toBlob(function(blob) {
+                    var url = URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'interactive_frame_' + new Date().getTime() + '.jpg';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    exportStatus.textContent = 'Frame exported successfully!';
+                    setTimeout(function() {
+                        exportStatus.style.display = 'none';
+                    }, 2000);
+                }, 'image/jpeg', 0.9);
+                
+            } catch (error) {
+                console.error('Error exporting frame:', error);
+                var exportStatus = document.getElementById('exportStatus');
+                exportStatus.style.display = 'block';
+                exportStatus.textContent = 'Error exporting frame: ' + error.message;
+                exportStatus.style.color = '#dc3545';
+                setTimeout(function() {
+                    exportStatus.style.display = 'none';
+                    exportStatus.style.color = '#666';
+                }, 3000);
+            }
+        }
+
+        // Setup global key handler
+        document.addEventListener('keydown', function(e) {
+            var eventData = {
+                type: 'keypress',
+                key: e.key,
+                target_id: 'global'
+            };
+            window.edulcniJS.invokeCallbackWithData('global_key', eventData);
+        });
+
+        // Error handling
+        window.addEventListener('error', function(e) {
+            console.error('JavaScript error:', e);
+            setStatus('error', 'JavaScript error: ' + e.message + ' at ' + e.filename + ':' + e.lineno);
+        });
+
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('Unhandled promise rejection:', e.reason);
+            setStatus('error', 'Promise rejection: ' + e.reason);
+        });
+
+        // Load the emscripten generated JavaScript
+        setStatus('loading', 'Loading application...');
+    </script>
+    
+    <!-- Load the emscripten generated JS file -->
+    <script src="$JS_FILE_PATH"></script>
+</body>
+</html> 
