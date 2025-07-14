@@ -36,7 +36,7 @@ void demonstrate_sorting() {
     std::cout << std::endl;
     
     // Show initial state
-    edulcni::array_widget("sort_visualization", arr);
+    edulcni::vector_widget("sort_visualization", arr);
     edulcni::console("Starting bubble sort...", "info");
     edulcni::step();
     
@@ -49,7 +49,7 @@ void demonstrate_sorting() {
                 std::swap(arr[j], arr[j + 1]);
                 
                 // Update visualization
-                edulcni::array_widget("sort_visualization", arr);
+                edulcni::vector_widget("sort_visualization", arr);
                 edulcni::console("Swapped " + std::to_string(arr[j]) + " and " + std::to_string(arr[j+1]), "log");
                 edulcni::delay(300); // Slow down for visualization
                 edulcni::step();
@@ -129,7 +129,7 @@ void demonstrate_search_algorithms() {
     int target = 23;
     
     // Linear search visualization
-    edulcni::array_widget("linear_search", arr);
+    edulcni::vector_widget("linear_search", arr);
     edulcni::console("Linear Search for " + std::to_string(target), "info");
     edulcni::step();
     
@@ -138,6 +138,9 @@ void demonstrate_search_algorithms() {
         linear_comparisons++;
         edulcni::console("Checking index " + std::to_string(i) + ": " + std::to_string(arr[i]), "log");
         edulcni::delay(400);
+        edulcni::array_highlight("linear_search", i);
+        edulcni::step();
+        edulcni::array_clear_highlights("linear_search");
         edulcni::step();
         
         if (arr[i] == target) {
@@ -150,7 +153,7 @@ void demonstrate_search_algorithms() {
     edulcni::delay(1000);
     
     // Binary search visualization  
-    edulcni::array_widget("binary_search", arr);
+    edulcni::vector_widget("binary_search", arr);
     edulcni::console("Binary Search for " + std::to_string(target), "info");
     edulcni::step();
     
@@ -163,8 +166,11 @@ void demonstrate_search_algorithms() {
         
         edulcni::console("Checking middle index " + std::to_string(mid) + ": " + std::to_string(arr[mid]), "log");
         edulcni::delay(500);
+        edulcni::array_highlight("binary_search", mid);
+        edulcni::console("highlighted", "info");
         edulcni::step();
-        
+        edulcni::array_clear_highlights("binary_search");
+        edulcni::step();
         if (arr[mid] == target) {
             edulcni::console("Found " + std::to_string(target) + " at index " + std::to_string(mid), "success");
             edulcni::console("Binary search: " + std::to_string(binary_comparisons) + " comparisons", "info");
@@ -176,7 +182,6 @@ void demonstrate_search_algorithms() {
             right = mid - 1;
             edulcni::console("Target is smaller, searching left half", "log");
         }
-        edulcni::step();
     }
     
     edulcni::alert("Linear: " + std::to_string(linear_comparisons) + " vs Binary: " + std::to_string(binary_comparisons) + " comparisons");

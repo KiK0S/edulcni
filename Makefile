@@ -58,28 +58,18 @@ SOURCES = $(CORE_SOURCES) $(WIDGET_SOURCES)
 
 OBJECTS = $(SOURCES:$(SRCDIR)/%.cpp=$(BUILDDIR)/%.o)
 
-# Target configuration
-TARGET_BASE = edulcni
-TARGET = $(TARGET_BASE)$(TARGET_SUFFIX)
-OUTPUT_TARGET = $(TARGET)$(OUTPUT_EXT)
-
 # Examples
-ALL_STATIC_EXAMPLES = $(shell find $(EXAMPLEDIR) -name "*.cpp" -exec basename {} .cpp \; 2>/dev/null || echo "")
-STATIC_EXAMPLES = $(filter-out tic_tac_toe,$(ALL_STATIC_EXAMPLES))
-INTERACTIVE_EXAMPLES = tic_tac_toe
-SHARED_EXAMPLES = tic_tac_toe
-
-.PHONY: all clean examples help static interactive shared debug install
-.PHONY: $(STATIC_EXAMPLES) $(INTERACTIVE_EXAMPLES)
+STATIC_EXAMPLES = $(shell find $(EXAMPLEDIR)/static -name "*.cpp" -exec basename {} .cpp \; 2>/dev/null || echo "")
+INTERACTIVE_EXAMPLES = $(shell find $(EXAMPLEDIR)/interactive -name "*.cpp" -exec basename {} .cpp \; 2>/dev/null || echo "")
+SHARED_EXAMPLES = $(shell find $(EXAMPLEDIR)/shared -name "*.cpp" -exec basename {} .cpp \; 2>/dev/null || echo "")
 
 # Default target
 all: 
-	@echo "Building in $(BUILD_MODE) mode..."
-	@$(MAKE) $(OUTPUT_TARGET)
+	@$(MAKE) BUILD_MODE=shared $(SHARED_TARGET) 
 
 # Aliases for different build modes
 static:
-	@$(MAKE) BUILD_MODE=static all
+	@$(MAKE) BUILD_MODE=static
 
 interactive:
 	@$(MAKE) BUILD_MODE=interactive 
@@ -87,21 +77,11 @@ interactive:
 shared:
 	@$(MAKE) BUILD_MODE=shared $(SHARED_TARGET) 
 
-# Build main library
-$(OUTPUT_TARGET): $(OBJECTS)
-	@echo "Linking $(OUTPUT_TARGET)..."
-	$(CXX) $(CXXFLAGS) -o $@ $^
-ifeq ($(BUILD_MODE),interactive)
-	@echo "Build complete: $(TARGET).js and $(TARGET).wasm"
-else
-	@echo "Build complete: $(TARGET)"
-endif
-
 # Build shared library
-$(SHARED_TARGET): $(OBJECTS)
+$(SHARED_TARGET): $(SOURCES)
 	@echo "Building shared library $(SHARED_TARGET)..."
 	@mkdir -p $(LIBDIR)
-	$(CXX) $(CXXFLAGS) -shared -o $@ $^
+	$(CXX) $(CXXFLAGS) -shared -o $@  -I$(INCDIR) $^
 	@echo "Shared library created: $(SHARED_TARGET)"
 	@echo "Headers available in: $(INCDIR)/"
 	@echo ""
@@ -115,40 +95,43 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -I$(INCDIR) -c $< -o $@
 
 # Build examples
-examples:
-ifeq ($(BUILD_MODE),static)
-	@echo "Building static examples..."
-	@$(MAKE) $(STATIC_EXAMPLES) $(SHARED_EXAMPLES)
-else
+examples: examples-$(BUILD_MODE)
+
+# Mode-specific targets
+examples-interactive:
 	@echo "Building interactive examples..."
-	@$(MAKE) $(INTERACTIVE_EXAMPLES)
-endif
+	@for TARGET in $(INTERACTIVE_EXAMPLES); do \
+		$(MAKE) $$TARGET || exit 1; \
+	done
+
+examples-static:
+	@echo "Building static examples..."
+	@for TARGET in $(STATIC_EXAMPLES); do \
+		$(MAKE) $$TARGET || exit 1; \
+	done
+
+examples-shared:
+	@echo "Building shared examples..."
+	@for TARGET in $(SHARED_EXAMPLES); do \
+		$(MAKE) $$TARGET || exit 1; \
+	done
 
 # Static examples (generate individual targets)
-$(STATIC_EXAMPLES): %: $(EXAMPLEDIR)/%.cpp $(SOURCES)
+$(STATIC_EXAMPLES): %: $(EXAMPLEDIR)/static/%.cpp $(SOURCES)
 	@echo "Building static example: $@"
-	@mkdir -p examples/static
-	$(CXX) $(CXXFLAGS) -I$(INCDIR) $< $(SOURCES) -o examples/static/$@
+	@mkdir -p out
+	$(CXX) $(CXXFLAGS) -I$(INCDIR) $< $(SOURCES) -o out/$@
 
 # Special handling for tic_tac_toe (exists in both modes)
-tic_tac_toe:
-ifeq ($(BUILD_MODE),interactive)
+$(INTERACTIVE_EXAMPLES): %: $(EXAMPLEDIR)/interactive/%.cpp $(SOURCES)
 	@echo "Building interactive tic-tac-toe example..."
-	@mkdir -p examples/interactive
+	@mkdir -p out
 	$(CXX) $(CXXFLAGS) -I$(INCDIR) \
-		$(EXAMPLEDIR)/tic_tac_toe.cpp \
+		$(EXAMPLEDIR)/interactive/$@.cpp \
 		$(SOURCES) \
-		-o examples/interactive/tic_tac_toe.js
+		-o out/$@.js
 	@echo "Generating HTML page for interactive example..."
-	@$(MAKE) generate_interactive_html EXAMPLE_NAME=tic_tac_toe
-else
-	@echo "Building static tic-tac-toe example..."
-	@mkdir -p examples/static
-	$(CXX) $(CXXFLAGS) -I$(INCDIR) \
-		$(EXAMPLEDIR)/tic_tac_toe.cpp \
-		$(SOURCES) \
-		-o examples/static/tic_tac_toe
-endif
+	@$(MAKE) generate_interactive_html EXAMPLE_NAME=$@
 
 # Clean build files
 clean:
@@ -158,25 +141,12 @@ clean:
 	rm -rf examples/static examples/interactive examples/shared
 	rm -rf $(LIBDIR)
 
-# Development build with debug info
-debug: 
-ifeq ($(BUILD_MODE),interactive)
-	@$(MAKE) BUILD_MODE=interactive CXXFLAGS="$(CXXFLAGS) -g4 -O0 -s ASSERTIONS=2 -s RUNTIME_DEBUG=1" $(OUTPUT_TARGET)
-else
-	@$(MAKE) BUILD_MODE=static CXXFLAGS="$(CXXFLAGS) -g -O0" $(OUTPUT_TARGET)
-endif
-
-# Debug build for tic_tac_toe specifically
-debug_tic_tac_toe:
-	@$(MAKE) BUILD_MODE=interactive debug
-	@$(MAKE) BUILD_MODE=interactive tic_tac_toe
-
 # Build shared library demo
-shared_demo: shared
-	@echo "Building shared library demonstration..."
-	@mkdir -p examples/shared
-	$(CXX) -std=c++17 -I$(INCDIR) $(EXAMPLEDIR)/shared_library_demo.cpp -L$(LIBDIR) -ledulcni -o examples/shared/shared_demo
-	@echo "Shared library demo built: examples/shared/shared_demo"
+$(SHARED_EXAMPLES): %: $(EXAMPLEDIR)/shared/%.cpp $(SOURCES) shared install
+	@echo "Building shared library examples..."
+	@mkdir -p out
+	$(CXX) -std=c++17 -I$(INCDIR) $(EXAMPLEDIR)/shared/shared_library_demo.cpp -L$(LIBDIR) -ledulcni -o out/shared_demo
+	@echo "Shared library demo built: out/shared_demo"
 	@echo ""
 	@echo "Run with: ./examples/shared/shared_demo"
 	@echo "Make sure LD_LIBRARY_PATH includes: $(PWD)/$(LIBDIR)"
@@ -197,6 +167,7 @@ install: shared
 	@echo ""
 	@echo "Compile with:"
 	@echo "  g++ -std=c++17 -I$(HOME)/.local/include your_code.cpp -L$(HOME)/.local/lib -ledulcni -o your_program"
+	@export LD_LIBRARY_PATH="/home/kikos/.local/lib:$LD_LIBRARY_PATH"
 
 # Help target
 help:
@@ -248,7 +219,7 @@ generate_interactive_html:
 		exit 1; \
 	fi
 	@sed -e 's/$$TITLE/$(EXAMPLE_NAME)/g' -e 's/$$JS_FILE_PATH/$(EXAMPLE_NAME).js/g' \
-		static/templates/emscripten_viewer_template.html > examples/interactive/$(EXAMPLE_NAME).html
+		static/templates/emscripten_viewer_template.html > out/$(EXAMPLE_NAME).html
 	@echo "Generated: examples/interactive/$(EXAMPLE_NAME).html"
 	@echo "Open examples/interactive/$(EXAMPLE_NAME).html in your browser to run the interactive example"
 	@echo ""

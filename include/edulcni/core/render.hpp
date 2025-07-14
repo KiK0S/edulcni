@@ -240,5 +240,31 @@ public:
     }
 };
 
+// Transform element for zoom-pan and other transformations
+class Transform : public Element {
+private:
+    double a_, b_, c_, d_, e_, f_;
+    
+public:
+    Transform(double a, double b, double c, double d, double e, double f)
+        : a_(a), b_(b), c_(c), d_(d), e_(e), f_(f) {}
+    
+    std::string to_canvas_js() const override {
+        std::ostringstream js;
+        js << "ctx.save();\n";
+        js << "ctx.transform(" << a_ << ", " << b_ << ", " << c_ << ", " 
+           << d_ << ", " << e_ << ", " << f_ << ");\n";
+        return js.str();
+    }
+    
+    void to_right(double offset) override {
+        e_ += offset;
+    }
+    
+    void to_bottom(double offset) override {
+        f_ += offset;
+    }
+};
+
 } // namespace render
 } // namespace edulcni 

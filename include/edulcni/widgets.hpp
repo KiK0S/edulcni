@@ -8,3 +8,4 @@
 #include "edulcni/widgets/compare_v.hpp"
 #include "edulcni/widgets/binary_mask.hpp"
 #include "edulcni/widgets/label.hpp"
+#include "edulcni/widgets/geometry.hpp"

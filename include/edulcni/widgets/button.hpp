@@ -12,6 +12,13 @@ namespace edulcni {
 void register_button_click_handler(const std::string& id, 
                                  std::function<void()> callback);
 
+// Function to create a button widget
+void button_widget(const std::string& id, const std::string& text, 
+                  std::function<void()> click_handler = nullptr);
+
+// Function to trigger button click (for testing or programmatic clicks)
+void button_click(const std::string& id);
+
 namespace internal {
 
 class ButtonWidget : public Widget {
@@ -88,12 +95,5 @@ public:
 };
 
 } // namespace internal
-
-// Function to create a button widget
-void button_widget(const std::string& id, const std::string& text, 
-                  std::function<void()> click_handler = nullptr);
-
-// Function to trigger button click (for testing or programmatic clicks)
-void button_click(const std::string& id);
 
 } // namespace edulcni 

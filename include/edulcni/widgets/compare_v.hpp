@@ -12,6 +12,13 @@
 #include "edulcni/core/render.hpp"
 
 namespace edulcni {
+// Public API for compare_v widget
+void compare_v_widget(const std::string& id, 
+                     const std::string& top_widget_id, 
+                     const std::string& bottom_widget_id) ;
+
+void compare_v_set_spacing(const std::string& id, double spacing) ;
+
 namespace internal {
 
 class CompareVWidget : public Widget {
@@ -110,10 +117,4 @@ public:
 
 } // namespace internal
 
-// Public API for compare_v widget
-void compare_v_widget(const std::string& id, 
-                     const std::string& top_widget_id, 
-                     const std::string& bottom_widget_id) ;
-
-void compare_v_set_spacing(const std::string& id, double spacing) ;
 } // namespace edulcni 

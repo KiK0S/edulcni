@@ -224,7 +224,7 @@ int main() {
     update_board_display();
     
     // Start event loop
-    edulcni::start_event_loop();
+    edulcni::start_interactive_loop();
     
     return 0;
 } 

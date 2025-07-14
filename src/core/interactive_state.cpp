@@ -55,22 +55,6 @@ void InteractiveState::enable_interactive_mode() {
     #endif
 }
 
-void InteractiveState::set_render_callback(std::function<void()> callback) {
-    render_callback_ = callback;
-}
-
-void InteractiveState::request_frame_update() {
-    if (!interactive_mode_) return;
-    
-    // Call custom render callback if set
-    if (render_callback_) {
-        render_callback_();
-    }
-    
-    // Create and stream the frame
-    interactive_step();
-}
-
 void InteractiveState::stream_frame_to_browser() {
     if (!interactive_mode_) return;
     
@@ -102,14 +86,6 @@ void InteractiveState::interactive_step() {
 // Global functions
 void enable_interactive_mode() {
     internal::InteractiveState::instance().enable_interactive_mode();
-}
-
-void request_frame_update() {
-    internal::InteractiveState::instance().request_frame_update();
-}
-
-void set_auto_render(bool enabled) {
-    internal::InteractiveState::instance().set_auto_render(enabled);
 }
 
 void start_interactive_loop() {

@@ -47,21 +47,8 @@ namespace edulcni {
     inline void enable_interactive_mode() {
         edulcni::enable_interactive_mode();
     }
-    
-    inline void request_frame_update() {
-        edulcni::request_frame_update();
-    }
-    
-    inline void set_auto_render(bool enabled) {
-        edulcni::set_auto_render(enabled);
-    }
-    
+
     inline void start_interactive_loop() {
-        edulcni::start_interactive_loop();
-    }
-    
-    // Legacy function name (for backward compatibility)
-    inline void start_event_loop() {
         edulcni::start_interactive_loop();
     }
     

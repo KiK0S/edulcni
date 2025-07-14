@@ -15,6 +15,23 @@
 #include "edulcni/utils/to_string.hpp"
 
 namespace edulcni {
+// Type deduction function to create the right widget type
+template<typename Iterator>
+void array_widget(const std::string& id, Iterator begin, Iterator end);
+template<typename T>
+void vector_widget(const std::string& id, const std::vector<T>& v);
+// Overload for C-style arrays
+template<typename T, size_t N>
+void array_widget(const std::string& id, const T (&arr)[N]);
+void string_widget(const std::string& id, const std::string& s);
+
+// Common operations that work with any array widget type
+void array_highlight(const std::string& id, int index);
+void array_clear_highlights(const std::string& id);
+
+// Get widget dimensions
+std::pair<double, double> array_dimensions(const std::string& id);
+
 namespace internal {
 
 // Type-erased base array widget
@@ -131,7 +148,6 @@ void array_widget(const std::string& id, Iterator begin, Iterator end) {
     widget->update(begin, end);
 }
 
-void string_widget(const std::string& id, const std::string& s);
 
 template<typename T>
 void vector_widget(const std::string& id, const std::vector<T>& v) {
@@ -143,12 +159,4 @@ template<typename T, size_t N>
 void array_widget(const std::string& id, const T (&arr)[N]) {
     array_widget(id, std::begin(arr), std::end(arr));
 }
-
-// Common operations that work with any array widget type
-void array_highlight(const std::string& id, int index);
-void array_clear_highlights(const std::string& id);
-
-// Get widget dimensions
-std::pair<double, double> array_dimensions(const std::string& id);
-
 } // namespace edulcni 

@@ -23,18 +23,8 @@ public:
     // Enable interactive mode
     void enable_interactive_mode();
     
-    // Set custom render callback
-    void set_render_callback(std::function<void()> callback);
-    
-    // Request a frame update (triggers re-render)
-    void request_frame_update();
-    
     // Stream the latest frame to browser
     void stream_frame_to_browser();
-    
-    // Auto-render on widget changes
-    void set_auto_render(bool enabled) { auto_render_ = enabled; }
-    bool is_auto_render() const { return auto_render_; }
     
     // Interactive mode check
     bool is_interactive_mode() const { return interactive_mode_; }
@@ -53,8 +43,6 @@ public:
 
 // Global functions for interactive mode
 void enable_interactive_mode();
-void request_frame_update();
-void set_auto_render(bool enabled);
 void start_interactive_loop();
 
 } // namespace edulcni 
