@@ -49,6 +49,19 @@
             border-radius: 10px;
             padding: 20px;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+            cursor: grab;
+        }
+
+        .canvas-container:active {
+            cursor: grabbing;
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            transform-origin: 0 0;
+            transition: transform 0.1s ease-out;
         }
 
         #frameCanvas {
@@ -196,9 +209,14 @@
 <body>
     <div class="container">
         <h1>$TITLE</h1>
+        <div style="text-align: center; margin-bottom: 20px; color: #666; font-size: 14px;">
+            <strong>Navigation:</strong> Drag to pan • Mouse wheel to zoom • Press '0' or click "Reset View" to reset
+        </div>
         
         <div class="canvas-container">
-            <canvas id="frameCanvas" width="800" height="600"></canvas>
+            <div class="canvas-wrapper" id="canvasWrapper">
+                <canvas id="frameCanvas" width="800" height="600"></canvas>
+            </div>
         </div>
 
         <div class="controls">
@@ -207,6 +225,7 @@
                 <button id="pauseBtn" class="btn" disabled>Pause</button>
                 <button id="prevBtn" class="btn">Previous</button>
                 <button id="nextBtn" class="btn">Next</button>
+                <button id="resetViewBtn" class="btn">Reset View</button>
                 <div class="frame-info">
                     <span>Frame: </span>
                     <span id="currentFrame">0</span>
@@ -259,8 +278,18 @@
                 this.canvas = document.getElementById('frameCanvas');
                 this.ctx = this.canvas.getContext('2d');
                 
+                // Panning and zooming state
+                this.isPanning = false;
+                this.lastPanPoint = { x: 0, y: 0 };
+                this.panOffset = { x: 0, y: 0 };
+                this.zoomLevel = 1.0;
+                this.minZoom = 0.1;
+                this.maxZoom = 5.0;
+                this.canvasWrapper = document.getElementById('canvasWrapper');
+                
                 this.initializeElements();
                 this.setupEventListeners();
+                this.setupPanZoom();
                 this.loadFrameData();
             }
 
@@ -284,6 +313,7 @@
                 this.pauseBtn.addEventListener('click', () => this.pause());
                 this.prevBtn.addEventListener('click', () => this.previousFrame());
                 this.nextBtn.addEventListener('click', () => this.nextFrame());
+                document.getElementById('resetViewBtn').addEventListener('click', () => this.resetView());
                 
                 this.frameSlider.addEventListener('input', (e) => {
                     this.goToFrame(parseInt(e.target.value) - 1);
@@ -319,8 +349,162 @@
                             e.preventDefault();
                             this.nextFrame();
                             break;
+                        case '0':
+                            e.preventDefault();
+                            this.resetView();
+                            break;
                     }
                 });
+            }
+
+            setupPanZoom() {
+                const container = document.querySelector('.canvas-container');
+                
+                // Mouse events
+                container.addEventListener('mousedown', (e) => {
+                    if (e.button === 0) { // Left mouse button
+                        this.isPanning = true;
+                        this.lastPanPoint = { x: e.clientX, y: e.clientY };
+                        container.style.cursor = 'grabbing';
+                        e.preventDefault();
+                    }
+                });
+
+                container.addEventListener('mousemove', (e) => {
+                    if (this.isPanning) {
+                        const deltaX = e.clientX - this.lastPanPoint.x;
+                        const deltaY = e.clientY - this.lastPanPoint.y;
+                        
+                        this.panOffset.x += deltaX;
+                        this.panOffset.y += deltaY;
+                        
+                        this.updateTransform();
+                        
+                        this.lastPanPoint = { x: e.clientX, y: e.clientY };
+                        e.preventDefault();
+                    }
+                });
+
+                container.addEventListener('mouseup', (e) => {
+                    if (e.button === 0) {
+                        this.isPanning = false;
+                        container.style.cursor = 'grab';
+                    }
+                });
+
+                container.addEventListener('mouseleave', () => {
+                    this.isPanning = false;
+                    container.style.cursor = 'grab';
+                });
+
+                // Wheel zoom
+                container.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    
+                    const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+                    const newZoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.zoomLevel * zoomFactor));
+                    
+                    // Zoom towards mouse position
+                    const rect = container.getBoundingClientRect();
+                    const mouseX = e.clientX - rect.left;
+                    const mouseY = e.clientY - rect.top;
+                    
+                    const zoomRatio = newZoom / this.zoomLevel;
+                    this.panOffset.x = mouseX - (mouseX - this.panOffset.x) * zoomRatio;
+                    this.panOffset.y = mouseY - (mouseY - this.panOffset.y) * zoomRatio;
+                    
+                    this.zoomLevel = newZoom;
+                    this.updateTransform();
+                });
+
+                // Touch events for mobile
+                let touchStartDistance = 0;
+                let touchStartCenter = { x: 0, y: 0 };
+
+                container.addEventListener('touchstart', (e) => {
+                    if (e.touches.length === 1) {
+                        // Single touch - panning
+                        this.isPanning = true;
+                        this.lastPanPoint = { 
+                            x: e.touches[0].clientX, 
+                            y: e.touches[0].clientY 
+                        };
+                        e.preventDefault();
+                    } else if (e.touches.length === 2) {
+                        // Two touches - zooming
+                        const touch1 = e.touches[0];
+                        const touch2 = e.touches[1];
+                        touchStartDistance = Math.sqrt(
+                            Math.pow(touch2.clientX - touch1.clientX, 2) +
+                            Math.pow(touch2.clientY - touch1.clientY, 2)
+                        );
+                        touchStartCenter = {
+                            x: (touch1.clientX + touch2.clientX) / 2,
+                            y: (touch1.clientY + touch2.clientY) / 2
+                        };
+                        e.preventDefault();
+                    }
+                });
+
+                container.addEventListener('touchmove', (e) => {
+                    if (e.touches.length === 1 && this.isPanning) {
+                        // Single touch - panning
+                        const deltaX = e.touches[0].clientX - this.lastPanPoint.x;
+                        const deltaY = e.touches[0].clientY - this.lastPanPoint.y;
+                        
+                        this.panOffset.x += deltaX;
+                        this.panOffset.y += deltaY;
+                        
+                        this.updateTransform();
+                        
+                        this.lastPanPoint = { 
+                            x: e.touches[0].clientX, 
+                            y: e.touches[0].clientY 
+                        };
+                        e.preventDefault();
+                    } else if (e.touches.length === 2) {
+                        // Two touches - zooming
+                        const touch1 = e.touches[0];
+                        const touch2 = e.touches[1];
+                        const currentDistance = Math.sqrt(
+                            Math.pow(touch2.clientX - touch1.clientX, 2) +
+                            Math.pow(touch2.clientY - touch1.clientY, 2)
+                        );
+                        
+                        if (touchStartDistance > 0) {
+                            const zoomFactor = currentDistance / touchStartDistance;
+                            const newZoom = Math.max(this.minZoom, Math.min(this.maxZoom, this.zoomLevel * zoomFactor));
+                            
+                            // Zoom towards center point
+                            const rect = container.getBoundingClientRect();
+                            const centerX = touchStartCenter.x - rect.left;
+                            const centerY = touchStartCenter.y - rect.top;
+                            
+                            const zoomRatio = newZoom / this.zoomLevel;
+                            this.panOffset.x = centerX - (centerX - this.panOffset.x) * zoomRatio;
+                            this.panOffset.y = centerY - (centerY - this.panOffset.y) * zoomRatio;
+                            
+                            this.zoomLevel = newZoom;
+                            this.updateTransform();
+                        }
+                        e.preventDefault();
+                    }
+                });
+
+                container.addEventListener('touchend', (e) => {
+                    this.isPanning = false;
+                    touchStartDistance = 0;
+                });
+            }
+
+            updateTransform() {
+                this.canvasWrapper.style.transform = `translate(${this.panOffset.x}px, ${this.panOffset.y}px) scale(${this.zoomLevel})`;
+            }
+
+            resetView() {
+                this.panOffset = { x: 0, y: 0 };
+                this.zoomLevel = 1.0;
+                this.updateTransform();
             }
 
             loadFrameData() {

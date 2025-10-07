@@ -15,22 +15,30 @@
 #include "edulcni/utils/to_string.hpp"
 
 namespace edulcni {
-// Type deduction function to create the right widget type
+
+DEFINE_WIDGET_TYPE(Array)
+
 template<typename Iterator>
-void array_widget(const std::string& id, Iterator begin, Iterator end);
+ArrayIDType array_widget(const ArrayIDType& id, Iterator begin, Iterator end);
 template<typename T>
-void vector_widget(const std::string& id, const std::vector<T>& v);
-// Overload for C-style arrays
+ArrayIDType vector_widget(const ArrayIDType& id, const std::vector<T>& v);
 template<typename T, size_t N>
-void array_widget(const std::string& id, const T (&arr)[N]);
-void string_widget(const std::string& id, const std::string& s);
+ArrayIDType array_widget(const ArrayIDType& id, const T (&arr)[N]);
+ArrayIDType array_widget(const ArrayIDType& id, std::initializer_list<int> v);
+ArrayIDType string_widget(const ArrayIDType& id, const std::string& s);
+ArrayIDType bigint_widget(const ArrayIDType& id, const std::string& s);
+ArrayIDType bitint_widget(const ArrayIDType& id, int x);
 
 // Common operations that work with any array widget type
-void array_highlight(const std::string& id, int index);
-void array_clear_highlights(const std::string& id);
+void highlight_single(const ArrayIDType& id, int index);
+void highlight_subsegment(const ArrayIDType& id, int start, int end);
+template<typename Iterator>
+void highlight_subsequence(const ArrayIDType& id, Iterator begin, Iterator end);
+void highlight_subsequence(const ArrayIDType& id, std::initializer_list<int> indices);
+void clear_highlights(const ArrayIDType& id);
 
 // Get widget dimensions
-std::pair<double, double> array_dimensions(const std::string& id);
+std::pair<double, double> array_dimensions(const ArrayIDType& id);
 
 namespace internal {
 
@@ -140,23 +148,25 @@ public:
 
 // Type deduction function to create the right widget type
 template<typename Iterator>
-void array_widget(const std::string& id, Iterator begin, Iterator end) {
+ArrayIDType array_widget(const ArrayIDType& id, Iterator begin, Iterator end) {
     using ValueType = typename std::iterator_traits<Iterator>::value_type;
     
     auto* widget = internal::State::instance()
         .get_or_create_widget<internal::ArrayWidget<ValueType>>(id);
     widget->update(begin, end);
+    return id;
 }
 
 
 template<typename T>
-void vector_widget(const std::string& id, const std::vector<T>& v) {
-    array_widget(id, v.begin(), v.end());
+ArrayIDType vector_widget(const ArrayIDType& id, const std::vector<T>& v) {
+    return array_widget(id, v.begin(), v.end());
 }
 
 // Overload for C-style arrays
 template<typename T, size_t N>
-void array_widget(const std::string& id, const T (&arr)[N]) {
-    array_widget(id, std::begin(arr), std::end(arr));
+ArrayIDType array_widget(const ArrayIDType& id, const T (&arr)[N]) {
+    return array_widget(id, std::begin(arr), std::end(arr));
 }
+
 } // namespace edulcni 

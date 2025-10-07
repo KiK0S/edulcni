@@ -18,6 +18,39 @@ void set_graph(const std::string& graph_id, const std::vector<std::vector<int>>&
     }
 }
 
+// Set graph with specific strategy
+void set_tree(const std::string& graph_id, const std::vector<std::vector<int>>& adj_list, int root) {
+    auto* widget = internal::State::instance()
+        .get_widget_typed<internal::GraphWidgetBase>(graph_id);
+    if (widget) {
+        widget->set_tree(adj_list, root);
+    }
+}
+
+void set_bfs_layered(const std::string& graph_id, const std::vector<std::vector<int>>& adj_list, int start) {
+    auto* widget = internal::State::instance()
+        .get_widget_typed<internal::GraphWidgetBase>(graph_id);
+    if (widget) {
+        widget->set_bfs_layered(adj_list, start);
+    }
+}
+
+void set_bipartite(const std::string& graph_id, const std::vector<std::vector<int>>& adj_list) {
+    auto* widget = internal::State::instance()
+        .get_widget_typed<internal::GraphWidgetBase>(graph_id);
+    if (widget) {
+        widget->set_bipartite(adj_list);
+    }
+}
+
+void set_planar(const std::string& graph_id, const std::vector<std::vector<int>>& adj_list) {
+    auto* widget = internal::State::instance()
+        .get_widget_typed<internal::GraphWidgetBase>(graph_id);
+    if (widget) {
+        widget->set_planar(adj_list);
+    }
+}
+
 // Highlight operations
 void highlight_vertex(const std::string& graph_id, int vertex_id, bool highlight) {
     auto* widget = internal::State::instance()

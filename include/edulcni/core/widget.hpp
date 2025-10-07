@@ -73,4 +73,18 @@ public:
 void handle_widget_click(const std::string& widget_id, double x, double y);
 void register_widget_click_handler(const std::string& widget_id);
 
+#define DEFINE_WIDGET_TYPE(name) \
+    struct name##IDType { \
+        std::string value; \
+        name##IDType() = default; \
+        name##IDType(const char* s) : value(s) {} \
+        name##IDType(const std::string& s) : value(s) {} \
+        name##IDType(std::string&& s) : value(std::move(s)) {} \
+        operator const std::string&() const { return value; } \
+        operator std::string&() { return value; } \
+        bool operator==(const name##IDType& other) const { return value == other.value; } \
+        bool operator!=(const name##IDType& other) const { return value != other.value; } \
+        bool operator<(const name##IDType& other) const { return value < other.value; } \
+    };
+
 } // namespace edulcni 

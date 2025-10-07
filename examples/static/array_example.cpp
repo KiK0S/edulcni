@@ -7,32 +7,32 @@
 
 // Bubble Sort implementation with visualization
 void bubble_sort(std::vector<int>& arr) {
-    edulcni::array_widget("array", arr.begin(), arr.end());
+    auto id = edulcni::array_widget("array", arr.begin(), arr.end());
     edulcni::step();
     
     int n = arr.size();
     for (int i = 0; i < n - 1; ++i) {
         for (int j = 0; j < n - i - 1; ++j) {
             // Highlight the elements being compared
-            edulcni::array_clear_highlights("array");
-            edulcni::array_highlight("array", j);
-            edulcni::array_highlight("array", j + 1);
+            edulcni::clear_highlights(id);
+            edulcni::highlight_single(id, j);
+            edulcni::highlight_single(id, j + 1);
             
             edulcni::step();
             if (arr[j] > arr[j + 1]) {
                 // Swap elements
                 std::swap(arr[j], arr[j + 1]);
-                edulcni::array_widget("array", arr.begin(), arr.end());
-                edulcni::array_highlight("array", j);
-                edulcni::array_highlight("array", j + 1);
+                id = edulcni::array_widget(id, arr.begin(), arr.end());
+                edulcni::highlight_single(id, j);
+                edulcni::highlight_single(id, j + 1);
                 edulcni::step();
             }
         }
     }
     
     // Show the final sorted array
-    edulcni::array_clear_highlights("array");
-    edulcni::array_widget("array", arr.begin(), arr.end());
+    edulcni::clear_highlights(id);
+    id = edulcni::array_widget(id, arr.begin(), arr.end());
 }
 
 int main() {

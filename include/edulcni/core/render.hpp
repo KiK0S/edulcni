@@ -23,8 +23,10 @@ struct Color {
     static Color Yellow() { return Color(255, 255, 0); }
     static Color Black() { return Color(0, 0, 0); }
     static Color White() { return Color(255, 255, 255); }
+    static Color Gray() { return Color(128, 128, 128); }
     static Color Highlight() { return Color(255, 235, 59); } // Yellow highlight
-    
+    static Color Transparent() { return Color(0, 0, 0, 0); }
+
     std::string to_css() const {
         std::ostringstream ss;
         if (a == 255) {

@@ -130,6 +130,15 @@ public:
         return nullptr;
     }
     
+    void delete_widget(const std::string& id) {
+        _assert_initialized();
+        
+        auto it = widgets_.find(id);
+        if (it != widgets_.end()) {
+            widgets_.erase(it);
+        }
+    }
+    
     const std::vector<Frame>& frames() const {
         return frames_;
     }

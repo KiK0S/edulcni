@@ -23,9 +23,9 @@ int main() {
     edulcni::array_widget("doubles", double_data.begin(), double_data.end());
     
     // Highlight some elements
-    edulcni::array_highlight("integers", 2);
-    edulcni::array_highlight("strings", 1);
-    edulcni::array_highlight("doubles", 0);
+    edulcni::highlight_single("integers", 2);
+    edulcni::highlight_single("strings", 1);
+    edulcni::highlight_single("doubles", 0);
     
     std::cout << "Visualization exported to ./mixed_types_output\n";
     std::cout << "Open ./mixed_types_output/index.html in a browser to view\n";

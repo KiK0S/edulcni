@@ -23,72 +23,74 @@ namespace internal {
     class GeometryWidgetBase;
 }
 
+DEFINE_WIDGET_TYPE(Geometry)
+
 // ============================================================================
 // PUBLIC API
 // ============================================================================
 
-void create_geometry_widget(const std::string& id, double width, double height, double grid_spacing = 20.0);
+GeometryIDType create_geometry_widget(const std::string& id, double width, double height, double grid_spacing = 20.0);
 
 template<typename PointType>
-void draw_point(const std::string& widget_id, const PointType& point, 
+void draw_point(const GeometryIDType& widget_id, const PointType& point, 
                 const std::string& color = "black", double radius = 3.0,
                 const std::string& label = "");
 
 template<typename PointType>
-void draw_points(const std::string& widget_id, const std::vector<PointType>& points,
+void draw_points(const GeometryIDType& widget_id, const std::vector<PointType>& points,
                  const std::string& color = "black", double radius = 3.0,
                  const std::vector<std::string>& labels = {});
 
 template<typename PointType>
-void draw_segment(const std::string& widget_id, const PointType& start, const PointType& end,
+void draw_segment(const GeometryIDType& widget_id, const PointType& start, const PointType& end,
                   const std::string& color = "black", double width = 1.0,
                   const std::string& style = "solid");
 
 template<typename PointType, typename VectorType>
-void draw_line(const std::string& widget_id, const PointType& point, const VectorType& direction,
+void draw_line(const GeometryIDType& widget_id, const PointType& point, const VectorType& direction,
                const std::string& color = "black", double width = 1.0,
                const std::string& style = "solid");
 
 template<typename PointType>
-void draw_circle(const std::string& widget_id, const PointType& center, double radius,
+void draw_circle(const GeometryIDType& widget_id, const PointType& center, double radius,
                  const std::string& color = "transparent", const std::string& stroke_color = "black",
                  double stroke_width = 1.0, bool fill = false);
 
 template<typename PointType>
-void draw_polygon(const std::string& widget_id, const std::vector<PointType>& vertices,
+void draw_polygon(const GeometryIDType& widget_id, const std::vector<PointType>& vertices,
                   const std::string& color = "transparent", const std::string& stroke_color = "black",
                   double stroke_width = 1.0, bool fill = false);
 
 template<typename PointType, typename VectorType>
-void draw_halfplane(const std::string& widget_id, const PointType& boundary_point, 
+void draw_halfplane(const GeometryIDType& widget_id, const PointType& boundary_point, 
                     const VectorType& direction, const std::string& color = "rgba(173, 216, 230, 0.3)",
                     const std::string& boundary_color = "black");
 
 template<typename PointType, typename VectorType>
-void draw_vector(const std::string& widget_id, const PointType& origin, const VectorType& direction,
+void draw_vector(const GeometryIDType& widget_id, const PointType& origin, const VectorType& direction,
                  const std::string& color = "red", double width = 2.0, double head_size = 8.0,
                  const std::string& label = "");
 
 template<typename PointType>
-void highlight_point(const std::string& widget_id, const PointType& point, 
+void highlight_point(const GeometryIDType& widget_id, const PointType& point, 
                      bool highlight = true, const std::string& color = "yellow");
 
-void clear_geometry(const std::string& widget_id);
-void clear_highlights(const std::string& widget_id);
+void clear_geometry(const GeometryIDType& widget_id);
+void clear_highlights(const GeometryIDType& widget_id);
 
-void set_grid(const std::string& widget_id, bool enabled = true, double spacing = 20.0,
+void set_grid(const GeometryIDType& widget_id, bool enabled = true, double spacing = 20.0,
               const std::string& color = "#e0e0e0");
 
-void set_coordinate_system(const std::string& widget_id, bool show_axes = true,
+void set_coordinate_system(const GeometryIDType& widget_id, bool show_axes = true,
                           double origin_x = -1, double origin_y = -1,
                           double scale_x = 1.0, double scale_y = 1.0);
 
-void enable_zoom_pan(const std::string& widget_id, bool enabled = true, 
+void enable_zoom_pan(const GeometryIDType& widget_id, bool enabled = true, 
                      double min_zoom = 0.1, double max_zoom = 10.0);
 
-void auto_scale_view(const std::string& widget_id, double padding_factor = 0.1);
+void auto_scale_view(const GeometryIDType& widget_id, double padding_factor = 0.1);
 
-void register_geometry_click_handler(const std::string& widget_id, 
+void register_geometry_click_handler(const GeometryIDType& widget_id, 
                                     std::function<void(double x, double y)> callback);
 
 
@@ -374,7 +376,7 @@ protected:
 // ============================================================================
 
 template<typename PointType>
-void draw_point(const std::string& widget_id, const PointType& point, 
+void draw_point(const GeometryIDType& widget_id, const PointType& point, 
                 const std::string& color, double radius,
                 const std::string& label) {
     auto& state = internal::State::instance();
@@ -384,7 +386,7 @@ void draw_point(const std::string& widget_id, const PointType& point,
 }
 
 template<typename PointType>
-void draw_points(const std::string& widget_id, const std::vector<PointType>& points,
+void draw_points(const GeometryIDType& widget_id, const std::vector<PointType>& points,
                  const std::string& color, double radius,
                  const std::vector<std::string>& labels) {
     auto& state = internal::State::instance();
@@ -397,7 +399,7 @@ void draw_points(const std::string& widget_id, const std::vector<PointType>& poi
 }
 
 template<typename PointType>
-void draw_segment(const std::string& widget_id, const PointType& start, const PointType& end,
+void draw_segment(const GeometryIDType& widget_id, const PointType& start, const PointType& end,
                   const std::string& color, double width,
                   const std::string& style) {
     auto& state = internal::State::instance();
@@ -407,7 +409,7 @@ void draw_segment(const std::string& widget_id, const PointType& start, const Po
 }
 
 template<typename PointType, typename VectorType>
-void draw_line(const std::string& widget_id, const PointType& point, const VectorType& direction,
+void draw_line(const GeometryIDType& widget_id, const PointType& point, const VectorType& direction,
                const std::string& color, double width,
                const std::string& style) {
     auto& state = internal::State::instance();
@@ -417,7 +419,7 @@ void draw_line(const std::string& widget_id, const PointType& point, const Vecto
 }
 
 template<typename PointType>
-void draw_circle(const std::string& widget_id, const PointType& center, double radius,
+void draw_circle(const GeometryIDType& widget_id, const PointType& center, double radius,
                  const std::string& color, const std::string& stroke_color,
                  double stroke_width, bool fill) {
     auto& state = internal::State::instance();
@@ -427,7 +429,7 @@ void draw_circle(const std::string& widget_id, const PointType& center, double r
 }
 
 template<typename PointType>
-void draw_polygon(const std::string& widget_id, const std::vector<PointType>& vertices,
+void draw_polygon(const GeometryIDType& widget_id, const std::vector<PointType>& vertices,
                   const std::string& color, const std::string& stroke_color,
                   double stroke_width, bool fill) {
     auto& state = internal::State::instance();
@@ -442,7 +444,7 @@ void draw_polygon(const std::string& widget_id, const std::vector<PointType>& ve
 }
 
 template<typename PointType, typename VectorType>
-void draw_halfplane(const std::string& widget_id, const PointType& boundary_point, 
+void draw_halfplane(const GeometryIDType& widget_id, const PointType& boundary_point, 
                     const VectorType& direction, const std::string& color,
                     const std::string& boundary_color) {
     auto& state = internal::State::instance();
@@ -452,7 +454,7 @@ void draw_halfplane(const std::string& widget_id, const PointType& boundary_poin
 }
 
 template<typename PointType, typename VectorType>
-void draw_vector(const std::string& widget_id, const PointType& origin, const VectorType& direction,
+void draw_vector(const GeometryIDType& widget_id, const PointType& origin, const VectorType& direction,
                  const std::string& color, double width, double head_size,
                  const std::string& label) {
     auto& state = internal::State::instance();
@@ -462,7 +464,7 @@ void draw_vector(const std::string& widget_id, const PointType& origin, const Ve
 }
 
 template<typename PointType>
-void highlight_point(const std::string& widget_id, const PointType& point, 
+void highlight_point(const GeometryIDType& widget_id, const PointType& point, 
                      bool highlight, const std::string& color) {
     auto& state = internal::State::instance();
     if (auto* widget = state.get_widget_typed<internal::GeometryWidgetBase>(widget_id)) {

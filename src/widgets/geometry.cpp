@@ -14,27 +14,28 @@ namespace edulcni {
 // NON-TEMPLATE FUNCTION IMPLEMENTATIONS
 // ============================================================================
 
-void create_geometry_widget(const std::string& id, double width, double height, double grid_spacing) {
+GeometryIDType create_geometry_widget(const std::string& id, double width, double height, double grid_spacing) {
     auto& state = internal::State::instance();
     auto widget = state.get_or_create_widget<internal::GeometryWidgetBase>(id, width, height);
     widget->set_grid_spacing(grid_spacing);
+    return id;
 }
 
-void clear_geometry(const std::string& widget_id) {
+void clear_geometry(const GeometryIDType& widget_id) {
     auto& state = internal::State::instance();
     if (auto* widget = state.get_widget_typed<internal::GeometryWidgetBase>(widget_id)) {
         widget->clear_all_elements();
     }
 }
 
-void clear_highlights(const std::string& widget_id) {
+void clear_highlights(const GeometryIDType& widget_id) {
     auto& state = internal::State::instance();
     if (auto* widget = state.get_widget_typed<internal::GeometryWidgetBase>(widget_id)) {
         widget->clear_highlights();
     }
 }
 
-void set_grid(const std::string& widget_id, bool enabled, double spacing, const std::string& color) {
+void set_grid(const GeometryIDType& widget_id, bool enabled, double spacing, const std::string& color) {
     auto& state = internal::State::instance();
     if (auto* widget = state.get_widget_typed<internal::GeometryWidgetBase>(widget_id)) {
         widget->set_grid_enabled(enabled);
@@ -43,7 +44,7 @@ void set_grid(const std::string& widget_id, bool enabled, double spacing, const 
     }
 }
 
-void set_coordinate_system(const std::string& widget_id, bool show_axes,
+void set_coordinate_system(const GeometryIDType& widget_id, bool show_axes,
                           double origin_x, double origin_y, double scale_x, double scale_y) {
     auto& state = internal::State::instance();
     if (auto* widget = state.get_widget_typed<internal::GeometryWidgetBase>(widget_id)) {
@@ -55,7 +56,7 @@ void set_coordinate_system(const std::string& widget_id, bool show_axes,
     }
 }
 
-void enable_zoom_pan(const std::string& widget_id, bool enabled, double min_zoom, double max_zoom) {
+void enable_zoom_pan(const GeometryIDType& widget_id, bool enabled, double min_zoom, double max_zoom) {
     auto& state = internal::State::instance();
     if (auto* widget = state.get_widget_typed<internal::GeometryWidgetBase>(widget_id)) {
         widget->set_zoom_pan_enabled(enabled);
@@ -63,14 +64,14 @@ void enable_zoom_pan(const std::string& widget_id, bool enabled, double min_zoom
     }
 }
 
-void auto_scale_view(const std::string& widget_id, double padding_factor) {
+void auto_scale_view(const GeometryIDType& widget_id, double padding_factor) {
     auto& state = internal::State::instance();
     if (auto* widget = state.get_widget_typed<internal::GeometryWidgetBase>(widget_id)) {
         widget->auto_scale(padding_factor);
     }
 }
 
-void register_geometry_click_handler(const std::string& widget_id, 
+void register_geometry_click_handler(const GeometryIDType& widget_id, 
                                     std::function<void(double x, double y)> callback) {
     auto& state = internal::State::instance();
     if (auto* widget = state.get_widget_typed<internal::GeometryWidgetBase>(widget_id)) {

@@ -40,6 +40,10 @@ namespace edulcni {
         std::cout << "Logging message: " << message << " with type: " << type << std::endl;
         internal::State::instance().console(message, type);
     }
+    
+    inline void delete_widget(const std::string& id) {
+        internal::State::instance().delete_widget(id);
+    }
 
 
     

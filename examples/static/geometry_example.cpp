@@ -24,15 +24,15 @@ int main() {
     edulcni::step();
     
     // Create a geometry widget with grid
-    edulcni::create_geometry_widget("geo1", 800, 600, 20.0);
+    auto id = edulcni::create_geometry_widget("geo1", 800, 600, 20.0);
     edulcni::step();
     
     // Enable zoom-pan functionality
-    edulcni::enable_zoom_pan("geo1", true, 0.1, 10.0);
+    edulcni::enable_zoom_pan(id, true, 0.1, 10.0);
     edulcni::step();
     
     // Set up coordinate system (flip Y-axis for mathematical convention)
-    edulcni::set_coordinate_system("geo1", true, 400, 300, 1.0, -1.0);
+    edulcni::set_coordinate_system(id, true, 400, 300, 1.0, -1.0);
     edulcni::step();
     
     // Draw some points with labels
@@ -41,63 +41,63 @@ int main() {
     Point p3(300, 200);
     Point p4(150, 250);
     
-    edulcni::draw_point("geo1", p1, "red", 5.0, "A");
+    edulcni::draw_point(id, p1, "red", 5.0, "A");
     edulcni::step();
     
-    edulcni::draw_point("geo1", p2, "blue", 5.0, "B");
+    edulcni::draw_point(id, p2, "blue", 5.0, "B");
     edulcni::step();
     
-    edulcni::draw_point("geo1", p3, "green", 5.0, "C");
+    edulcni::draw_point(id, p3, "green", 5.0, "C");
     edulcni::step();
     
-    edulcni::draw_point("geo1", p4, "purple", 5.0, "D");
+    edulcni::draw_point(id, p4, "purple", 5.0, "D");
     edulcni::step();
     
     // Draw line segments connecting the points
-    edulcni::draw_segment("geo1", p1, p2, "black", 2.0, "solid");
+    edulcni::draw_segment(id, p1, p2, "black", 2.0, "solid");
     edulcni::step();
     
-    edulcni::draw_segment("geo1", p2, p3, "black", 2.0, "solid");
+    edulcni::draw_segment(id, p2, p3, "black", 2.0, "solid");
     edulcni::step();
     
-    edulcni::draw_segment("geo1", p3, p4, "black", 2.0, "solid");
+    edulcni::draw_segment(id, p3, p4, "black", 2.0, "solid");
     edulcni::step();
     
-    edulcni::draw_segment("geo1", p4, p1, "black", 2.0, "solid");
+    edulcni::draw_segment(id, p4, p1, "black", 2.0, "solid");
     edulcni::step();
     
     // Draw a circle
     Point center(250, 250);
-    edulcni::draw_circle("geo1", center, 50.0, "rgba(255, 0, 0, 0.3)", "red", 2.0, true);
+    edulcni::draw_circle(id, center, 50.0, "rgba(255, 0, 0, 0.3)", "red", 2.0, true);
     edulcni::step();
     
     // Draw a polygon (triangle)
     std::vector<Point> triangle = {{400, 100}, {450, 200}, {350, 200}};
-    edulcni::draw_polygon("geo1", triangle, "rgba(0, 255, 0, 0.3)", "green", 2.0, true);
+    edulcni::draw_polygon(id, triangle, "rgba(0, 255, 0, 0.3)", "green", 2.0, true);
     edulcni::step();
     
     // Draw a vector
     Vector dir(50, 30);
-    edulcni::draw_vector("geo1", p1, dir, "purple", 3.0, 10.0, "v1");
+    edulcni::draw_vector(id, p1, dir, "purple", 3.0, 10.0, "v1");
     edulcni::step();
     
     // Draw another vector
     Vector dir2(-30, 40);
-    edulcni::draw_vector("geo1", p2, dir2, "orange", 3.0, 10.0, "v2");
+    edulcni::draw_vector(id, p2, dir2, "orange", 3.0, 10.0, "v2");
     edulcni::step();
     
     // Draw a half-plane (left side of a line)
     Vector line_dir(1, 1);  // Direction vector
-    edulcni::draw_halfplane("geo1", Point(0, 0), line_dir, "rgba(0, 0, 255, 0.2)", "blue");
+    edulcni::draw_halfplane(id, Point(0, 0), line_dir, "rgba(0, 0, 255, 0.2)", "blue");
     edulcni::step();
     
     // Draw another half-plane
     Vector line_dir2(1, -1);
-    edulcni::draw_halfplane("geo1", Point(500, 100), line_dir2, "rgba(255, 165, 0, 0.2)", "orange");
+    edulcni::draw_halfplane(id, Point(500, 100), line_dir2, "rgba(255, 165, 0, 0.2)", "orange");
     edulcni::step();
     
     // Highlight a point
-    edulcni::highlight_point("geo1", p2, true, "yellow");
+    edulcni::highlight_point(id, p2, true, "yellow");
     edulcni::step();
     
     // Draw some additional points in a pattern
@@ -113,42 +113,42 @@ int main() {
         labels.push_back(std::to_string(i + 1));
     }
     
-    edulcni::draw_points("geo1", pattern_points, "gray", 3.0, labels);
+    edulcni::draw_points(id, pattern_points, "gray", 3.0, labels);
     edulcni::step();
     
     // Draw a dashed line
-    edulcni::draw_segment("geo1", Point(50, 50), Point(350, 350), "red", 2.0, "dashed");
+    edulcni::draw_segment(id, Point(50, 50), Point(350, 350), "red", 2.0, "dashed");
     edulcni::step();
     
     // Draw a dotted line
-    edulcni::draw_segment("geo1", Point(50, 350), Point(350, 50), "blue", 2.0, "dotted");
+    edulcni::draw_segment(id, Point(50, 350), Point(350, 50), "blue", 2.0, "dotted");
     edulcni::step();
     
     // Draw an infinite line
     Vector line_direction(1, 0.5);
-    edulcni::draw_line("geo1", Point(200, 100), line_direction, "green", 1.5, "solid");
+    edulcni::draw_line(id, Point(200, 100), line_direction, "green", 1.5, "solid");
     edulcni::step();
     
     // Auto-scale the view to fit all data with 10% padding
-    edulcni::auto_scale_view("geo1", 0.1);
+    edulcni::auto_scale_view(id, 0.1);
     edulcni::step();
     
     // Register a click handler
-    edulcni::register_geometry_click_handler("geo1", [](double x, double y) {
+    edulcni::register_geometry_click_handler(id, [](double x, double y) {
         std::cout << "Clicked at world coordinates: (" << x << ", " << y << ")" << std::endl;
     });
     edulcni::step();
     
     // Demonstrate clearing highlights
-    edulcni::clear_highlights("geo1");
+    edulcni::clear_highlights(id);
     edulcni::step();
     
     // Highlight a different point
-    edulcni::highlight_point("geo1", p3, true, "cyan");
+    edulcni::highlight_point(id, p3, true, "cyan");
     edulcni::step();
     
     // Show grid settings
-    edulcni::set_grid("geo1", true, 25.0, "#d0d0d0");
+    edulcni::set_grid(id, true, 25.0, "#d0d0d0");
     edulcni::step();
     
     // Draw a complex polygon (star shape)
@@ -158,14 +158,14 @@ int main() {
         double radius = (i % 2 == 0) ? 40.0 : 20.0;
         star.emplace_back(600 + radius * cos(angle), 200 + radius * sin(angle));
     }
-    edulcni::draw_polygon("geo1", star, "rgba(255, 255, 0, 0.4)", "gold", 2.0, true);
+    edulcni::draw_polygon(id, star, "rgba(255, 255, 0, 0.4)", "gold", 2.0, true);
     edulcni::step();
     
     // Draw multiple circles in a pattern
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             Point circle_center(500 + i * 60, 400 + j * 60);
-            edulcni::draw_circle("geo1", circle_center, 15.0, "transparent", "brown", 1.0, false);
+            edulcni::draw_circle(id, circle_center, 15.0, "transparent", "brown", 1.0, false);
             edulcni::step();
         }
     }
