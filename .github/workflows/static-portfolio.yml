@@ -2,7 +2,7 @@ name: Build static example portfolio
 
 on:
   push:
-    branches: [ main, work ]
+    branches: [ master ]
   pull_request:
     paths:
       - 'examples/static/**'
@@ -32,6 +32,7 @@ jobs:
           fetch-depth: 0
 
       - name: Configure GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: actions/configure-pages@v4
 
       - name: Install build dependencies
@@ -44,11 +45,13 @@ jobs:
         run: python3 scripts/generate_static_portfolio.py
 
       - name: Upload GitHub Pages artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: actions/upload-pages-artifact@v3
         with:
           path: portfolio
 
   deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     needs: build
     runs-on: ubuntu-latest
     environment:
