@@ -464,6 +464,24 @@ edulcni/
 └── lib/              # Shared library output (when built)
 ```
 
+## Publishing the Static Portfolio
+
+The repository ships with an automated GitHub Pages pipeline (see [`static-portfolio.yml`](.github/workflows/static-portfolio.yml)) that
+builds every static example, runs each binary to export the visualizations, and publishes the resulting gallery under a single portfolio
+site. Pushes to the `main` or `work` branches automatically refresh the published pages, and the workflow can also be triggered on-demand
+from the Actions tab.
+
+To reproduce the GitHub Pages artifact locally, run:
+
+```bash
+make examples-static
+python3 scripts/generate_static_portfolio.py
+```
+
+The command above creates a `portfolio/` directory containing per-example exports, lightweight redirect helpers, a searchable `portfolio.json`
+manifest, and an `index.html` landing page that links to every visualization. Open `portfolio/index.html` in your browser to explore the gallery
+without waiting for the action to finish.
+
 ## Contributing
 
 1. Fork the repository

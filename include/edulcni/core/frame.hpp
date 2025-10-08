@@ -16,15 +16,19 @@ namespace internal {
 class Frame {
 private:
     std::map<std::string, std::unique_ptr<render::Element>> widget_renders_;
-    
+    render::Bounds bounds_ = render::Bounds::empty();
+
 public:
     Frame() = default;
-    
+
     void add_widget_state(const std::string& id, std::unique_ptr<render::Element> render) {
         // widget_states_[id] = state;
+        if (render) {
+            bounds_.expand(render->bounds());
+        }
         widget_renders_[id] = std::move(render);
     }
-    
+
     std::string to_canvas_js() const {
         std::ostringstream js;
         js << "function(ctx, canvas) {\n";
@@ -37,6 +41,10 @@ public:
         
         js << "}\n";
         return js.str();
+    }
+
+    const render::Bounds& bounds() const {
+        return bounds_;
     }
 };
 

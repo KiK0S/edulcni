@@ -2,6 +2,6 @@ prompt
 edulcni/build
 edulcni-old
 build
+out/
 *_output
-examples/static
-examples/interactive
+portfolio/

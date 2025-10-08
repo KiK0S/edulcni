@@ -6,9 +6,77 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <algorithm>
+#include <limits>
 
 namespace edulcni {
 namespace render {
+
+struct Bounds {
+    double min_x;
+    double min_y;
+    double max_x;
+    double max_y;
+
+    static Bounds empty() {
+        return Bounds{std::numeric_limits<double>::max(),
+                      std::numeric_limits<double>::max(),
+                      std::numeric_limits<double>::lowest(),
+                      std::numeric_limits<double>::lowest()};
+    }
+
+    static Bounds from_point(double x, double y) {
+        return Bounds{x, y, x, y};
+    }
+
+    bool is_empty() const {
+        return min_x > max_x || min_y > max_y;
+    }
+
+    void expand(double x, double y) {
+        if (is_empty()) {
+            min_x = max_x = x;
+            min_y = max_y = y;
+            return;
+        }
+        min_x = std::min(min_x, x);
+        min_y = std::min(min_y, y);
+        max_x = std::max(max_x, x);
+        max_y = std::max(max_y, y);
+    }
+
+    void expand(const Bounds& other) {
+        if (other.is_empty()) {
+            return;
+        }
+        if (is_empty()) {
+            *this = other;
+            return;
+        }
+        min_x = std::min(min_x, other.min_x);
+        min_y = std::min(min_y, other.min_y);
+        max_x = std::max(max_x, other.max_x);
+        max_y = std::max(max_y, other.max_y);
+    }
+
+    void translate(double dx, double dy) {
+        if (is_empty()) {
+            return;
+        }
+        min_x += dx;
+        max_x += dx;
+        min_y += dy;
+        max_y += dy;
+    }
+
+    double width() const {
+        return is_empty() ? 0.0 : (max_x - min_x);
+    }
+
+    double height() const {
+        return is_empty() ? 0.0 : (max_y - min_y);
+    }
+};
 
 // Color type
 struct Color {
@@ -43,12 +111,14 @@ class Element {
 public:
     virtual ~Element() = default;
     virtual std::string to_canvas_js() const = 0;
-    
+
     // Move the element to the right by the specified amount
     virtual void to_right(double offset) = 0;
-    
+
     // Move the element down by the specified amount
     virtual void to_bottom(double offset) = 0;
+
+    virtual Bounds bounds() const = 0;
 };
 
 // Container for multiple elements
@@ -86,6 +156,19 @@ public:
     // Move the group and all its children down
     void to_bottom(double offset) override {
         y_ += offset;
+    }
+
+    Bounds bounds() const override {
+        Bounds total = Bounds::empty();
+        for (const auto& child : children_) {
+            Bounds child_bounds = child->bounds();
+            child_bounds.translate(x_, y_);
+            total.expand(child_bounds);
+        }
+        if (children_.empty()) {
+            total = Bounds::from_point(x_, y_);
+        }
+        return total;
     }
 };
 
@@ -126,6 +209,12 @@ public:
     void to_bottom(double offset) override {
         y_ += offset;
     }
+
+    Bounds bounds() const override {
+        Bounds b = Bounds::from_point(x_, y_);
+        b.expand(x_ + width_, y_ + height_);
+        return b;
+    }
 };
 
 // Text element
@@ -161,6 +250,22 @@ public:
     // Move the text down
     void to_bottom(double offset) override {
         y_ += offset;
+    }
+
+    Bounds bounds() const override {
+        double approx_width = std::max(10.0, static_cast<double>(text_.size()) * 8.0);
+        double approx_height = 18.0;
+        double left = x_;
+
+        if (align_ == "center") {
+            left -= approx_width / 2.0;
+        } else if (align_ == "right") {
+            left -= approx_width;
+        }
+
+        Bounds b = Bounds::from_point(left, y_ - approx_height / 2.0);
+        b.expand(left + approx_width, y_ + approx_height / 2.0);
+        return b;
     }
 };
 
@@ -198,6 +303,12 @@ public:
     void to_bottom(double offset) override {
         y1_ += offset;
         y2_ += offset;
+    }
+
+    Bounds bounds() const override {
+        Bounds b = Bounds::from_point(x1_, y1_);
+        b.expand(x2_, y2_);
+        return b;
     }
 };
 
@@ -240,6 +351,12 @@ public:
     void to_bottom(double offset) override {
         y_ += offset;
     }
+
+    Bounds bounds() const override {
+        Bounds b = Bounds::from_point(x_ - radius_, y_ - radius_);
+        b.expand(x_ + radius_, y_ + radius_);
+        return b;
+    }
 };
 
 // Transform element for zoom-pan and other transformations
@@ -265,6 +382,10 @@ public:
     
     void to_bottom(double offset) override {
         f_ += offset;
+    }
+
+    Bounds bounds() const override {
+        return Bounds::empty();
     }
 };
 

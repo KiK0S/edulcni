@@ -9,3 +9,4 @@
 #include "edulcni/widgets/label.hpp"
 #include "edulcni/widgets/geometry.hpp"
 #include "edulcni/widgets/recursion.hpp"
+#include "edulcni/widgets/data_structures.hpp"

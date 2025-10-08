@@ -26,8 +26,10 @@ struct Vertex {
     double x, y;        // Position
     std::string label;  // Display label
     bool highlighted = false;
-    
-    Vertex(int id, double x, double y, std::string label) 
+    render::Color fill_color = render::Color(200, 200, 255);
+    render::Color stroke_color = render::Color::Black();
+
+    Vertex(int id, double x, double y, std::string label)
         : id(id), x(x), y(y), label(std::move(label)) {}
 };
 
@@ -105,12 +107,15 @@ public:
         
         // Render vertices
         for (const auto& vertex : vertices) {
-            render::Color bg_color = vertex.highlighted ? 
-                render::Color::Yellow() : render::Color(200, 200, 255);
-            
+            render::Color bg_color = vertex.highlighted ?
+                render::Color::Yellow() : vertex.fill_color;
+            render::Color border_color = vertex.highlighted ?
+                render::Color::Black() : vertex.stroke_color;
+            double stroke_width = vertex.highlighted ? 2.0 : 1.0;
+
             group->add(std::make_unique<render::Circle>(
                 vertex.x, vertex.y, 20,
-                bg_color, render::Color::Black(), 1.0
+                bg_color, border_color, stroke_width
             ));
             
             group->add(std::make_unique<render::Text>(
@@ -209,12 +214,15 @@ public:
         
         // Render vertices
         for (const auto& vertex : vertices) {
-            render::Color bg_color = vertex.highlighted ? 
-                render::Color::Yellow() : render::Color(200, 200, 255);
-            
+            render::Color bg_color = vertex.highlighted ?
+                render::Color::Yellow() : vertex.fill_color;
+            render::Color border_color = vertex.highlighted ?
+                render::Color::Black() : vertex.stroke_color;
+            double stroke_width = vertex.highlighted ? 2.0 : 1.0;
+
             group->add(std::make_unique<render::Circle>(
                 vertex.x, vertex.y, 20,
-                bg_color, render::Color::Black(), 1.0
+                bg_color, border_color, stroke_width
             ));
             
             group->add(std::make_unique<render::Text>(
@@ -320,14 +328,17 @@ public:
         
         // Render vertices
         for (const auto& vertex : vertices) {
-            render::Color bg_color = vertex.highlighted ? 
-                render::Color::Yellow() : render::Color(200, 200, 255);
-            
+            render::Color bg_color = vertex.highlighted ?
+                render::Color::Yellow() : vertex.fill_color;
+            render::Color border_color = vertex.highlighted ?
+                render::Color::Black() : vertex.stroke_color;
+            double stroke_width = vertex.highlighted ? 2.0 : 1.0;
+
             group->add(std::make_unique<render::Circle>(
                 vertex.x, vertex.y, 20,
-                bg_color, render::Color::Black(), 1.0
+                bg_color, border_color, stroke_width
             ));
-            
+
             group->add(std::make_unique<render::Text>(
                 vertex.x, vertex.y, vertex.label,
                 "14px Arial", render::Color::Black(), "center"
@@ -557,12 +568,15 @@ public:
         
         // Draw vertices
         for (const auto& vertex : vertices) {
-            render::Color bg_color = vertex.highlighted ? 
-                render::Color::Yellow() : render::Color::White();
-            
+            render::Color bg_color = vertex.highlighted ?
+                render::Color::Yellow() : vertex.fill_color;
+            render::Color border_color = vertex.highlighted ?
+                render::Color::Black() : vertex.stroke_color;
+            double stroke_width = vertex.highlighted ? 3.0 : 2.0;
+
             group->add(std::make_unique<render::Circle>(
                 vertex.x, vertex.y, 18,
-                bg_color, render::Color::Black(), 2.0
+                bg_color, border_color, stroke_width
             ));
             
             group->add(std::make_unique<render::Text>(
@@ -661,11 +675,46 @@ public:
             }
         }
     }
-    
+
+    void set_vertex_label(int id, const std::string& label) {
+        for (auto& vertex : vertices_) {
+            if (vertex.id == id) {
+                vertex.label = label;
+                break;
+            }
+        }
+    }
+
+    void set_vertex_labels(const std::vector<std::string>& labels) {
+        size_t limit = std::min(vertices_.size(), labels.size());
+        for (size_t i = 0; i < limit; ++i) {
+            vertices_[i].label = labels[i];
+        }
+    }
+
+    void set_vertex_color(int id, render::Color fill, render::Color stroke = render::Color::Black()) {
+        for (auto& vertex : vertices_) {
+            if (vertex.id == id) {
+                vertex.fill_color = fill;
+                vertex.stroke_color = stroke;
+                break;
+            }
+        }
+    }
+
+    void set_vertex_colors(const std::vector<render::Color>& fills,
+                           render::Color stroke = render::Color::Black()) {
+        size_t limit = std::min(vertices_.size(), fills.size());
+        for (size_t i = 0; i < limit; ++i) {
+            vertices_[i].fill_color = fills[i];
+            vertices_[i].stroke_color = stroke;
+        }
+    }
+
     void highlight_edge(int from, int to, bool highlight = true) {
         for (auto& edge : edges_) {
             // Check both directions for undirected graphs
-            if ((edge.from == from && edge.to == to) || 
+            if ((edge.from == from && edge.to == to) ||
                 (edge.from == to && edge.to == from)) {
                 edge.highlighted = highlight;
                 break;

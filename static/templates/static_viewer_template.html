@@ -277,6 +277,7 @@
                 this.playSpeed = 1.0;
                 this.canvas = document.getElementById('frameCanvas');
                 this.ctx = this.canvas.getContext('2d');
+                this.canvasMeta = null;
                 
                 // Panning and zooming state
                 this.isPanning = false;
@@ -513,21 +514,36 @@
                     if (typeof window.frameData === 'undefined') {
                         throw new Error('Frame data not found. Make sure the data file defines window.frameData');
                     }
-                    
-                    if (!Array.isArray(window.frameData)) {
-                        throw new Error('Frame data must be an array');
+
+                    const defaultCanvas = { width: 800, height: 600, offsetX: 0, offsetY: 0 };
+
+                    if (Array.isArray(window.frameData)) {
+                        this.frames = window.frameData;
+                        this.canvasMeta = defaultCanvas;
+                    } else if (window.frameData && Array.isArray(window.frameData.frames)) {
+                        this.frames = window.frameData.frames;
+                        const canvas = window.frameData.canvas || {};
+                        this.canvasMeta = {
+                            width: canvas.width || defaultCanvas.width,
+                            height: canvas.height || defaultCanvas.height,
+                            offsetX: canvas.offsetX || defaultCanvas.offsetX,
+                            offsetY: canvas.offsetY || defaultCanvas.offsetY
+                        };
+                    } else {
+                        throw new Error('Frame data must be an array or an object with a frames array');
                     }
-                    
-                    this.frames = window.frameData;
+
+                    this.canvas.width = this.canvasMeta.width;
+                    this.canvas.height = this.canvasMeta.height;
                     this.initializeViewer();
-                    
+
                 } catch (error) {
                     this.showError(`Error loading frame data: ${error.message}`);
                 }
             }
 
             initializeViewer() {
-                if (this.frames.length === 0) {
+                if (!Array.isArray(this.frames) || this.frames.length === 0) {
                     this.showError('No frames found in data file');
                     return;
                 }
@@ -569,13 +585,20 @@
                 
                 // Set up canvas context
                 this.ctx.save();
-                
+                if (this.canvasMeta) {
+                    this.ctx.translate(-this.canvasMeta.offsetX, -this.canvasMeta.offsetY);
+                }
+
                 try {
                     const frameInstructions = this.frames[frameIndex];
-                    
+                    if (typeof frameInstructions !== 'function') {
+                        console.warn('Frame is not a function:', frameInstructions);
+                        return;
+                    }
+
                     // Always treat as function and call with ctx and canvas
                     frameInstructions(this.ctx, this.canvas);
-                    
+
                 } catch (error) {
                     console.error(`Error drawing frame ${frameIndex}:`, error);
                     this.ctx.fillStyle = '#ff0000';
