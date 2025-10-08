@@ -6,6 +6,7 @@
 #include <string>
 #include <fstream>
 #include <filesystem>
+#include <cmath>
 #include "edulcni/core/frame.hpp"
 
 namespace edulcni {
@@ -27,14 +28,34 @@ public:
 private:
     void export_frame_data(const std::string& output_dir, const std::vector<Frame>& frames) {
         std::ofstream js_file(output_dir + "/data.js");
-        js_file << "window.frameData = [\n";
-        
+
+        render::Bounds global_bounds = render::Bounds::empty();
+        for (const auto& frame : frames) {
+            global_bounds.expand(frame.bounds());
+        }
+
+        const double margin = 40.0;
+        double width = std::max(800.0, global_bounds.width() + margin * 2.0);
+        double height = std::max(600.0, global_bounds.height() + margin * 2.0);
+        double offset_x = global_bounds.is_empty() ? 0.0 : (global_bounds.min_x - margin);
+        double offset_y = global_bounds.is_empty() ? 0.0 : (global_bounds.min_y - margin);
+
+        js_file << "window.frameData = {\n";
+        js_file << "    canvas: {\n";
+        js_file << "        width: " << static_cast<int>(std::ceil(width)) << ",\n";
+        js_file << "        height: " << static_cast<int>(std::ceil(height)) << ",\n";
+        js_file << "        offsetX: " << offset_x << ",\n";
+        js_file << "        offsetY: " << offset_y << "\n";
+        js_file << "    },\n";
+        js_file << "    frames: [\n";
+
         for (size_t i = 0; i < frames.size(); ++i) {
             if (i > 0) js_file << ",\n";
-            js_file << "    " << frames[i].to_canvas_js();
+            js_file << "        " << frames[i].to_canvas_js();
         }
-        
-        js_file << "\n];\n";
+
+        js_file << "\n    ]\n";
+        js_file << "};\n";
         js_file.close();
     }
     
