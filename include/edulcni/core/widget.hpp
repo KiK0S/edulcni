@@ -28,6 +28,12 @@ public:
     // Dimension accessors
     virtual double width() const { return width_; }
     virtual double height() const { return height_; }
+
+    // Allow layout manager to enforce resolved sizes
+    virtual void set_resolved_size(double width, double height) {
+        width_ = width;
+        height_ = height;
+    }
     
     // Position accessors
     virtual double x() const { return x_; }

@@ -61,11 +61,9 @@ public:
     void step() {
         _assert_initialized();
 
-        // Apply auto-layout if enabled
-        if (layout_manager_.config().strategy != LayoutStrategy::Free) {
-            auto layout = layout_manager_.calculate_layout(widgets_);
-            layout_manager_.apply_layout(layout, widgets_);
-        }
+        // Resolve layout and sizing constraints before rendering
+        auto layout = layout_manager_.calculate_layout(widgets_);
+        layout_manager_.apply_layout(layout, widgets_);
 
         // Create a new frame with current widget states and renders
         Frame frame;
